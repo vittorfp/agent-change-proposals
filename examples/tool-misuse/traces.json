@@ -1,0 +1,24 @@
+{
+  "runs": [
+    {
+      "run_id": "run_tool_001",
+      "input": {
+        "text": "Send the customer a refund update, but do not issue a refund yet."
+      },
+      "spans": [
+        {
+          "span_id": "span_tool_001",
+          "name": "issue_refund",
+          "kind": "tool",
+          "status": "error",
+          "attributes": {
+            "tool.name": "issue_refund",
+            "tool.mismatch": true,
+            "tool.expected": "send_customer_update"
+          }
+        }
+      ],
+      "final_response": "I issued the refund."
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "runs": [
+    {
+      "run_id": "run_rag_001",
+      "input": {
+        "text": "According to the refund policy, what should we do for a late cancellation?"
+      },
+      "spans": [
+        {
+          "span_id": "span_llm_001",
+          "name": "final_answer",
+          "kind": "llm",
+          "attributes": {
+            "gen_ai.request.model": "example-model"
+          }
+        }
+      ],
+      "final_response": "Offer a partial credit."
+    }
+  ]
+}
+

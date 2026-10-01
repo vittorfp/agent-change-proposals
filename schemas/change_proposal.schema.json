@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-change-proposals.dev/schemas/change_proposal.schema.json",
+  "title": "Agent Change Proposal",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "proposal_id",
+    "title",
+    "status",
+    "problem",
+    "evidence",
+    "hypothesis",
+    "proposed_change",
+    "validation",
+    "risk",
+    "rollback"
+  ],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "proposal_id": { "type": "string" },
+    "title": { "type": "string" },
+    "status": { "enum": ["proposed", "accepted", "rejected", "tested"] },
+    "problem": { "type": "object" },
+    "evidence": {
+      "type": "array",
+      "items": { "type": "object" }
+    },
+    "hypothesis": { "type": "object" },
+    "proposed_change": { "type": "object" },
+    "validation": { "type": "object" },
+    "risk": { "type": "object" },
+    "rollback": { "type": "object" }
+  }
+}

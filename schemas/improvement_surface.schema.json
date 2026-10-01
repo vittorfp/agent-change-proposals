@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-change-proposals.dev/schemas/improvement_surface.schema.json",
+  "title": "Improvement Surface",
+  "type": "object",
+  "required": ["schema_version", "agent_ref", "allowed_targets"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "agent_ref": { "type": "object" },
+    "allowed_targets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["target_id", "type", "component"],
+        "properties": {
+          "target_id": { "type": "string" },
+          "type": {
+            "enum": [
+              "prompt",
+              "config",
+              "routing_rule",
+              "tool_policy",
+              "retrieval_policy",
+              "guardrail_threshold"
+            ]
+          },
+          "component": { "type": "string" },
+          "description": { "type": "string" }
+        }
+      }
+    }
+  }
+}

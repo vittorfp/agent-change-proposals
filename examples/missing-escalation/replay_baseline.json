@@ -1,0 +1,13 @@
+{
+  "suite_id": "missing_escalation",
+  "cases": [
+    {
+      "case_id": "high_risk_unclear_policy",
+      "passed": false,
+      "metrics": {
+        "escalated": false,
+        "approved_without_policy": true
+      }
+    }
+  ]
+}

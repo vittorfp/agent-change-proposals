@@ -1,0 +1,11 @@
+[
+  {
+    "run_id": "run_tool_001",
+    "timestamp": "2026-10-01T17:10:00Z",
+    "source": "human_review",
+    "label": "failure",
+    "confidence": 0.9,
+    "dimensions": ["tool_use", "tool_selection"],
+    "notes": "The agent selected an action tool when the task only requested a status update."
+  }
+]

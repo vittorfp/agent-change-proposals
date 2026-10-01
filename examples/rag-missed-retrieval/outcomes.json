@@ -1,0 +1,12 @@
+[
+  {
+    "run_id": "run_rag_001",
+    "timestamp": "2026-10-01T17:00:00Z",
+    "source": "human_review",
+    "label": "failure",
+    "confidence": 0.95,
+    "dimensions": ["groundedness", "policy_compliance"],
+    "notes": "The answer should have cited the refund policy before responding."
+  }
+]
+

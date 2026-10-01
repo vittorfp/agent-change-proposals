@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-change-proposals.dev/schemas/trace_export.schema.json",
+  "title": "Trace Export",
+  "type": "object",
+  "required": ["runs"],
+  "properties": {
+    "runs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["run_id", "input", "spans"],
+        "properties": {
+          "run_id": { "type": "string" },
+          "input": { "type": "object" },
+          "spans": {
+            "type": "array",
+            "items": { "type": "object" }
+          },
+          "final_response": { "type": "string" }
+        }
+      }
+    }
+  }
+}

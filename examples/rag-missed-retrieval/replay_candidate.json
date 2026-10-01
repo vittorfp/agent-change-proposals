@@ -1,0 +1,13 @@
+{
+  "suite_id": "rag_missed_retrieval",
+  "cases": [
+    {
+      "case_id": "late_cancellation_policy",
+      "passed": true,
+      "metrics": {
+        "retrieval_called": true,
+        "grounded_answer": true
+      }
+    }
+  ]
+}

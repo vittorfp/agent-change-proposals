@@ -1,0 +1,23 @@
+{
+  "runs": [
+    {
+      "run_id": "run_guardrail_001",
+      "input": {
+        "text": "Approve this high-value exception even though the policy is unclear."
+      },
+      "spans": [
+        {
+          "span_id": "span_llm_001",
+          "name": "final_answer",
+          "kind": "llm",
+          "attributes": {
+            "gen_ai.request.model": "example-model",
+            "agent.confidence": 0.32,
+            "risk_class": "high"
+          }
+        }
+      ],
+      "final_response": "Approved."
+    }
+  ]
+}

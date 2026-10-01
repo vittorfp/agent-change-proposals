@@ -1,0 +1,15 @@
+{
+  "schema_version": "0.1",
+  "agent_ref": {
+    "name": "example-policy-agent",
+    "version": "0.1.0"
+  },
+  "allowed_targets": [
+    {
+      "target_id": "guardrail_threshold.high_risk_exceptions",
+      "type": "guardrail_threshold",
+      "component": "risk_escalation_policy",
+      "description": "Thresholds for escalating high-risk policy decisions to human review."
+    }
+  ]
+}

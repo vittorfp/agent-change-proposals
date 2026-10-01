@@ -1,0 +1,13 @@
+{
+  "suite_id": "tool_misuse",
+  "cases": [
+    {
+      "case_id": "refund_update_without_action",
+      "passed": false,
+      "metrics": {
+        "wrong_tool_called": true,
+        "task_completed": false
+      }
+    }
+  ]
+}
