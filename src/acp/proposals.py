@@ -22,33 +22,43 @@ TOOL_SPAN_KINDS = {"tool", "tool_call"}
 ESCALATION_SPAN_KINDS = {"escalation", "handoff", "human_handoff", "guardrail"}
 
 
-def build_proposal(trace_export: dict[str, Any], outcomes: list[dict[str, Any]], surface: dict[str, Any]) -> dict[str, Any]:
+def build_proposal(
+    trace_export: dict[str, Any],
+    outcomes: list[dict[str, Any]],
+    surface: dict[str, Any],
+    created_at: str | None = None,
+) -> dict[str, Any]:
+    created_at = created_at or datetime.now(timezone.utc).isoformat()
     failures = {event["run_id"]: event for event in outcomes if event.get("label") == "failure"}
     tool_misuse = [
         run for run in trace_export.get("runs", [])
         if run.get("run_id") in failures and _looks_like_tool_misuse(run, failures[run["run_id"]])
     ]
     if tool_misuse:
-        return _tool_misuse_proposal(tool_misuse[0], failures[tool_misuse[0]["run_id"]], surface)
+        return _tool_misuse_proposal(tool_misuse[0], failures[tool_misuse[0]["run_id"]], surface, created_at)
 
     missing_escalation = [
         run for run in trace_export.get("runs", [])
         if run.get("run_id") in failures and _looks_like_missing_escalation(run, failures[run["run_id"]])
     ]
     if missing_escalation:
-        return _missing_escalation_proposal(missing_escalation[0], failures[missing_escalation[0]["run_id"]], surface)
+        return _missing_escalation_proposal(
+            missing_escalation[0], failures[missing_escalation[0]["run_id"]], surface, created_at
+        )
 
     missed_retrieval = [
         run for run in trace_export.get("runs", [])
         if run.get("run_id") in failures and _looks_like_missed_retrieval(run)
     ]
     if missed_retrieval:
-        return _missed_retrieval_proposal(missed_retrieval[0], failures[missed_retrieval[0]["run_id"]], surface)
+        return _missed_retrieval_proposal(missed_retrieval[0], failures[missed_retrieval[0]["run_id"]], surface, created_at)
 
-    return _no_pattern_proposal(trace_export, outcomes, surface)
+    return _no_pattern_proposal(trace_export, outcomes, surface, created_at)
 
 
-def _missed_retrieval_proposal(run: dict[str, Any], outcome: dict[str, Any], surface: dict[str, Any]) -> dict[str, Any]:
+def _missed_retrieval_proposal(
+    run: dict[str, Any], outcome: dict[str, Any], surface: dict[str, Any], created_at: str
+) -> dict[str, Any]:
     target = _select_target(surface, {"routing_rule", "retrieval_policy"})
     proposal_id = _stable_id(run["run_id"], target.get("target_id", "unknown"))
 
@@ -57,7 +67,7 @@ def _missed_retrieval_proposal(run: dict[str, Any], outcome: dict[str, Any], sur
         "proposal_id": proposal_id,
         "title": "Require retrieval for context-dependent questions",
         "status": "proposed",
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": created_at,
         "agent_ref": surface.get("agent_ref", {}),
         "problem": {
             "summary": "A failed run appears to require external context, but no retrieval step was observed.",
@@ -109,7 +119,9 @@ def _missed_retrieval_proposal(run: dict[str, Any], outcome: dict[str, Any], sur
     }
 
 
-def _tool_misuse_proposal(run: dict[str, Any], outcome: dict[str, Any], surface: dict[str, Any]) -> dict[str, Any]:
+def _tool_misuse_proposal(
+    run: dict[str, Any], outcome: dict[str, Any], surface: dict[str, Any], created_at: str
+) -> dict[str, Any]:
     target = _select_target(surface, {"tool_policy", "routing_rule"})
     tool_span = next((span for span in run.get("spans", []) if _is_tool_span(span)), {})
     proposal_id = _stable_id(run["run_id"], target.get("target_id", "unknown"))
@@ -119,7 +131,7 @@ def _tool_misuse_proposal(run: dict[str, Any], outcome: dict[str, Any], surface:
         "proposal_id": proposal_id,
         "title": "Review tool-selection policy for failed tool use",
         "status": "proposed",
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": created_at,
         "agent_ref": surface.get("agent_ref", {}),
         "problem": {
             "summary": "A failed run includes a tool-use signal that appears inconsistent with the expected task.",
@@ -171,7 +183,9 @@ def _tool_misuse_proposal(run: dict[str, Any], outcome: dict[str, Any], surface:
     }
 
 
-def _missing_escalation_proposal(run: dict[str, Any], outcome: dict[str, Any], surface: dict[str, Any]) -> dict[str, Any]:
+def _missing_escalation_proposal(
+    run: dict[str, Any], outcome: dict[str, Any], surface: dict[str, Any], created_at: str
+) -> dict[str, Any]:
     target = _select_target(surface, {"guardrail_threshold", "routing_rule"})
     proposal_id = _stable_id(run["run_id"], target.get("target_id", "unknown"))
 
@@ -180,7 +194,7 @@ def _missing_escalation_proposal(run: dict[str, Any], outcome: dict[str, Any], s
         "proposal_id": proposal_id,
         "title": "Add escalation for high-risk uncertain responses",
         "status": "proposed",
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": created_at,
         "agent_ref": surface.get("agent_ref", {}),
         "problem": {
             "summary": "A failed run appears to require escalation or guardrail handling, but no escalation span was observed.",
@@ -315,14 +329,16 @@ def _stable_id(run_id: str, target_id: str) -> str:
     return f"acp_{digest}"
 
 
-def _no_pattern_proposal(trace_export: dict[str, Any], outcomes: list[dict[str, Any]], surface: dict[str, Any]) -> dict[str, Any]:
+def _no_pattern_proposal(
+    trace_export: dict[str, Any], outcomes: list[dict[str, Any]], surface: dict[str, Any], created_at: str
+) -> dict[str, Any]:
     digest = hashlib.sha256(str(trace_export).encode("utf-8")).hexdigest()[:12]
     return {
         "schema_version": "0.1",
         "proposal_id": f"acp_{digest}",
         "title": "No specific improvement pattern detected",
         "status": "proposed",
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": created_at,
         "agent_ref": surface.get("agent_ref", {}),
         "problem": {
             "summary": "The input data did not match a supported V0 detector.",

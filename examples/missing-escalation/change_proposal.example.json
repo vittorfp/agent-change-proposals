@@ -1,0 +1,71 @@
+{
+  "schema_version": "0.1",
+  "proposal_id": "acp_93c4631593a8",
+  "title": "Add escalation for high-risk uncertain responses",
+  "status": "proposed",
+  "created_at": "2026-10-02T00:00:00+00:00",
+  "agent_ref": {
+    "name": "example-policy-agent",
+    "version": "0.1.0"
+  },
+  "problem": {
+    "summary": "A failed run appears to require escalation or guardrail handling, but no escalation span was observed.",
+    "run_id": "run_guardrail_001",
+    "outcome_label": "failure",
+    "outcome_source": "human_review"
+  },
+  "evidence": [
+    {
+      "type": "outcome_event",
+      "run_id": "run_guardrail_001",
+      "label": "failure",
+      "confidence": 0.92,
+      "dimensions": [
+        "guardrail",
+        "escalation",
+        "policy_compliance"
+      ]
+    },
+    {
+      "type": "trace_pattern",
+      "run_id": "run_guardrail_001",
+      "observed": "Outcome dimensions indicate escalation or guardrail failure, but no escalation/handoff/guardrail span was found.",
+      "span_count": 1
+    }
+  ],
+  "hypothesis": {
+    "summary": "The escalation threshold or guardrail policy may be too permissive for high-risk uncertain answers.",
+    "confidence": "medium",
+    "limits": "This identifies a reviewable safety hypothesis, not proof that escalation is always correct."
+  },
+  "proposed_change": {
+    "target": {
+      "target_id": "guardrail_threshold.high_risk_exceptions",
+      "type": "guardrail_threshold",
+      "component": "risk_escalation_policy",
+      "description": "Thresholds for escalating high-risk policy decisions to human review."
+    },
+    "summary": "Escalate when uncertainty is high and the answer concerns protected, high-risk, or policy-sensitive decisions.",
+    "suggested_patch": {
+      "escalate_when": [
+        "risk_class is high",
+        "confidence is low",
+        "policy-sensitive decision is requested"
+      ]
+    }
+  },
+  "validation": {
+    "method": "controlled_replay",
+    "acceptance_criteria": [
+      "Candidate escalates this case.",
+      "Candidate does not over-escalate low-risk control cases."
+    ]
+  },
+  "risk": {
+    "level": "medium",
+    "notes": "Lower escalation thresholds can increase human-review load."
+  },
+  "rollback": {
+    "plan": "Revert the escalation-threshold change if over-escalation exceeds the agreed limit."
+  }
+}

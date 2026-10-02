@@ -74,6 +74,9 @@ The public schema files live in [schemas/](schemas/).
 - [OpenInference/Phoenix-style import](examples/openinference-phoenix)
 - [Langfuse export import](examples/langfuse-export)
 
+Each example includes a checked-in `change_proposal.example.json` so reviewers
+can inspect the output without running the CLI.
+
 ## Workflow
 
 ```text

@@ -1,0 +1,76 @@
+{
+  "schema_version": "0.1",
+  "proposal_id": "acp_ff83f6d706ad",
+  "title": "Require retrieval for context-dependent questions",
+  "status": "proposed",
+  "created_at": "2026-10-02T00:00:00+00:00",
+  "agent_ref": {
+    "name": "openinference-example-support-agent",
+    "version": "0.1.0"
+  },
+  "problem": {
+    "summary": "A failed run appears to require external context, but no retrieval step was observed.",
+    "run_id": "oi_trace_rag_001",
+    "outcome_label": "failure",
+    "outcome_source": "human_review"
+  },
+  "evidence": [
+    {
+      "type": "outcome_event",
+      "run_id": "oi_trace_rag_001",
+      "label": "failure",
+      "confidence": 0.95,
+      "dimensions": [
+        "groundedness",
+        "policy_compliance"
+      ]
+    },
+    {
+      "type": "trace_pattern",
+      "run_id": "oi_trace_rag_001",
+      "observed": "No retrieval span found for a context-dependent input.",
+      "span_count": 2
+    }
+  ],
+  "hypothesis": {
+    "summary": "The routing or retrieval policy is not requiring retrieval when the user asks for policy, historical, or source-grounded information.",
+    "confidence": "medium",
+    "limits": "This is a hypothesis from trace structure and outcome labels, not a causal proof."
+  },
+  "proposed_change": {
+    "target": {
+      "target_id": "retrieval_policy.main",
+      "type": "retrieval_policy",
+      "component": "main_retriever",
+      "description": "Rules that decide when external knowledge retrieval is required."
+    },
+    "summary": "Update the target so context-dependent questions trigger retrieval before final response generation.",
+    "suggested_patch": {
+      "require_retrieval_when_input_mentions": [
+        "according",
+        "context",
+        "decision",
+        "document",
+        "evidence",
+        "history",
+        "policy",
+        "refund",
+        "source"
+      ]
+    }
+  },
+  "validation": {
+    "method": "controlled_replay",
+    "acceptance_criteria": [
+      "Candidate run includes at least one retrieval span for this case.",
+      "Groundedness or correctness outcome improves without increasing blocked or escalated runs."
+    ]
+  },
+  "risk": {
+    "level": "low",
+    "notes": "May increase latency and retrieval cost for borderline context-dependent questions."
+  },
+  "rollback": {
+    "plan": "Revert the routing or retrieval-policy change if replay or online evaluation regresses."
+  }
+}

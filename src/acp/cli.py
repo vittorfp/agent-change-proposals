@@ -28,6 +28,7 @@ def main(argv: list[str] | None = None) -> int:
     from_trace_parser.add_argument("--outcomes", required=True)
     from_trace_parser.add_argument("--surface", required=True)
     from_trace_parser.add_argument("--output", required=True)
+    from_trace_parser.add_argument("--created-at")
 
     replay_parser = subparsers.add_parser("replay")
     replay_subparsers = replay_parser.add_subparsers(dest="replay_command", required=True)
@@ -51,7 +52,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "validate":
             return _validate(args.schema, args.path)
         if args.command == "proposal" and args.proposal_command == "from-trace":
-            return _proposal_from_trace(args.trace, args.outcomes, args.surface, args.output)
+            return _proposal_from_trace(args.trace, args.outcomes, args.surface, args.output, args.created_at)
         if args.command == "replay" and args.replay_command == "compare":
             return _replay_compare(args.baseline, args.candidate, args.output)
         if args.command == "import" and args.import_command == "openinference":
@@ -73,7 +74,9 @@ def _validate(schema_name: str, path: str) -> int:
     return 0
 
 
-def _proposal_from_trace(trace_path: str, outcomes_path: str, surface_path: str, output_path: str) -> int:
+def _proposal_from_trace(
+    trace_path: str, outcomes_path: str, surface_path: str, output_path: str, created_at: str | None = None
+) -> int:
     trace_export = load_data(trace_path)
     outcomes = load_data(outcomes_path)
     surface = load_data(surface_path)
@@ -82,7 +85,7 @@ def _proposal_from_trace(trace_path: str, outcomes_path: str, surface_path: str,
     validate(instance=outcomes, schema=SCHEMAS["outcome_events"])
     validate(instance=surface, schema=SCHEMAS["improvement_surface"])
 
-    proposal = build_proposal(trace_export, outcomes, surface)
+    proposal = build_proposal(trace_export, outcomes, surface, created_at=created_at)
     validate(instance=proposal, schema=SCHEMAS["change_proposal"])
     dump_data(Path(output_path), proposal)
     print(f"wrote: {output_path}")

@@ -1,0 +1,80 @@
+{
+  "schema_version": "0.1",
+  "proposal_id": "acp_f7961d540aec",
+  "title": "Review tool-selection policy for failed tool use",
+  "status": "proposed",
+  "created_at": "2026-10-02T00:00:00+00:00",
+  "agent_ref": {
+    "name": "langfuse-example-support-actions-agent",
+    "version": "0.1.0"
+  },
+  "problem": {
+    "summary": "A failed run includes a tool-use signal that appears inconsistent with the expected task.",
+    "run_id": "lf_trace_tool_001",
+    "outcome_label": "failure",
+    "outcome_source": "human_review"
+  },
+  "evidence": [
+    {
+      "type": "outcome_event",
+      "run_id": "lf_trace_tool_001",
+      "label": "failure",
+      "confidence": 0.9,
+      "dimensions": [
+        "tool_use",
+        "tool_selection"
+      ]
+    },
+    {
+      "type": "trace_pattern",
+      "run_id": "lf_trace_tool_001",
+      "observed": "A tool span was marked as mismatched, errored, or associated with a tool-use failure.",
+      "span": {
+        "span_id": "obs-tool-001",
+        "name": "issue_refund_tool",
+        "kind": "tool",
+        "status": "error",
+        "attributes": {
+          "langfuse.observation.type": "span",
+          "langfuse.observation.input": "{\"customer_id\":\"cus_123\"}",
+          "langfuse.observation.output": "{\"status\":\"issued\"}",
+          "langfuse.metadata.span_kind": "TOOL",
+          "langfuse.metadata.tool.name": "issue_refund",
+          "langfuse.metadata.tool.mismatch": true,
+          "langfuse.metadata.tool.expected": "send_customer_update"
+        }
+      }
+    }
+  ],
+  "hypothesis": {
+    "summary": "The tool-selection policy may be routing this class of request to the wrong tool or with insufficient preconditions.",
+    "confidence": "medium",
+    "limits": "This proposal relies on tool span metadata and outcome labels; it should be validated with targeted replay cases."
+  },
+  "proposed_change": {
+    "target": {
+      "target_id": "tool_policy.refund_actions",
+      "type": "tool_policy",
+      "component": "refund_tool_router",
+      "description": "Rules that decide when refund action tools may be called."
+    },
+    "summary": "Tighten tool-selection criteria or add a precondition check before invoking the affected tool.",
+    "suggested_patch": {
+      "add_precondition": "Only call the tool when required input fields are present and match the task intent."
+    }
+  },
+  "validation": {
+    "method": "controlled_replay",
+    "acceptance_criteria": [
+      "Candidate avoids the mismatched tool call for this case.",
+      "Candidate still uses the tool on positive control cases where it is required."
+    ]
+  },
+  "risk": {
+    "level": "medium",
+    "notes": "A stricter tool policy can reduce useful tool use if the preconditions are too narrow."
+  },
+  "rollback": {
+    "plan": "Revert the tool-policy change if positive control cases regress."
+  }
+}

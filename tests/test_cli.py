@@ -34,6 +34,8 @@ def test_proposal_from_trace(tmp_path: Path) -> None:
             str(root / "examples/rag-missed-retrieval/improvement_surface.json"),
             "--output",
             str(output),
+            "--created-at",
+            "2026-10-02T00:00:00+00:00",
         ]
     )
 
@@ -41,6 +43,7 @@ def test_proposal_from_trace(tmp_path: Path) -> None:
     proposal = json.loads(output.read_text(encoding="utf-8"))
     validate(instance=proposal, schema=CHANGE_PROPOSAL_SCHEMA)
     assert proposal["status"] == "proposed"
+    assert proposal["created_at"] == "2026-10-02T00:00:00+00:00"
     assert proposal["proposed_change"]["target"]["target_id"] == "retrieval_policy.main"
     assert "retrieval" in proposal["title"].lower()
 
@@ -115,6 +118,24 @@ def test_examples_generate_expected_proposals(tmp_path: Path, example_name: str,
     validate(instance=proposal, schema=CHANGE_PROPOSAL_SCHEMA)
     assert proposal["title"] == expected_title
     assert proposal["status"] == "proposed"
+
+
+@pytest.mark.parametrize(
+    ("example_name", "expected_title"),
+    EXAMPLES
+    + [
+        ("openinference-phoenix", "Require retrieval for context-dependent questions"),
+        ("langfuse-export", "Review tool-selection policy for failed tool use"),
+    ],
+)
+def test_checked_in_example_proposals_are_valid(example_name: str, expected_title: str) -> None:
+    root = Path(__file__).resolve().parents[1]
+    proposal_path = root / "examples" / example_name / "change_proposal.example.json"
+    proposal = json.loads(proposal_path.read_text(encoding="utf-8"))
+
+    validate(instance=proposal, schema=CHANGE_PROPOSAL_SCHEMA)
+    assert proposal["title"] == expected_title
+    assert proposal["created_at"] == "2026-10-02T00:00:00+00:00"
 
 
 @pytest.mark.parametrize(("example_name", "_expected_title"), EXAMPLES)

@@ -78,6 +78,12 @@ The generated proposal says:
 - how to validate the change;
 - what risk and rollback path exist.
 
+The checked-in sample output lives at:
+
+```text
+examples/rag-missed-retrieval/change_proposal.example.json
+```
+
 The key sentence is in the hypothesis limits:
 
 ```text
