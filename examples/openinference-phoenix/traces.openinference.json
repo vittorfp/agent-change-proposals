@@ -1,0 +1,24 @@
+{
+  "spans": [
+    {
+      "trace_id": "oi_trace_rag_001",
+      "span_id": "span_agent_001",
+      "name": "support_agent",
+      "attributes": {
+        "openinference.span.kind": "AGENT",
+        "input.value": "According to the refund policy, what should we do for a late cancellation?",
+        "output.value": "Offer a partial credit."
+      }
+    },
+    {
+      "trace_id": "oi_trace_rag_001",
+      "span_id": "span_llm_001",
+      "parent_span_id": "span_agent_001",
+      "name": "final_answer",
+      "attributes": {
+        "openinference.span.kind": "LLM",
+        "llm.model_name": "example-model"
+      }
+    }
+  ]
+}

@@ -15,6 +15,8 @@ Would this artifact be useful in your agent, eval, or observability workflow?
 - [README](../README.md): project positioning and quickstart.
 - [First proposal walkthrough](first-proposal.md): the smallest end-to-end
   workflow.
+- [Not an observability platform](not-an-observability-platform.md): project
+  boundaries and ecosystem fit.
 - [Change proposal schema](../schemas/change_proposal.schema.json): the core
   artifact.
 - [Examples](../examples): missed retrieval, tool misuse, and missing
@@ -45,4 +47,3 @@ Repo: https://github.com/vittorfp/agent-change-proposals
 I would love feedback from people running agent evals, observability pipelines,
 or internal agent platforms: would this artifact help you review behavior
 changes, or is it solving the wrong problem?
-

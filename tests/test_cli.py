@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 from acp.cli import main
+from acp.importers import openinference_to_trace_export
 from acp.proposals import build_proposal
 from jsonschema import validate
 
@@ -168,3 +169,89 @@ def test_retrieval_span_prevents_missed_retrieval_proposal() -> None:
 
     assert proposal["title"] == "No specific improvement pattern detected"
     assert proposal["proposed_change"]["summary"] == "No change proposed."
+
+
+def test_openinference_import_generates_trace_export(tmp_path: Path) -> None:
+    root = Path(__file__).resolve().parents[1]
+    example = root / "examples/openinference-phoenix"
+    output = tmp_path / "trace_export.json"
+
+    result = main(
+        [
+            "import",
+            "openinference",
+            str(example / "traces.openinference.json"),
+            "--output",
+            str(output),
+        ]
+    )
+
+    assert result == 0
+    trace_export = json.loads(output.read_text(encoding="utf-8"))
+    assert trace_export["runs"][0]["run_id"] == "oi_trace_rag_001"
+    assert trace_export["runs"][0]["input"]["text"].startswith("According to")
+    assert trace_export["runs"][0]["spans"][0]["kind"] == "agent"
+
+
+def test_openinference_import_feeds_proposal_generation(tmp_path: Path) -> None:
+    root = Path(__file__).resolve().parents[1]
+    example = root / "examples/openinference-phoenix"
+    trace_export = tmp_path / "trace_export.json"
+    proposal_output = tmp_path / "proposal.json"
+
+    assert main(
+        [
+            "import",
+            "openinference",
+            str(example / "traces.openinference.json"),
+            "--output",
+            str(trace_export),
+        ]
+    ) == 0
+
+    assert main(
+        [
+            "proposal",
+            "from-trace",
+            str(trace_export),
+            "--outcomes",
+            str(example / "outcomes.json"),
+            "--surface",
+            str(example / "improvement_surface.json"),
+            "--output",
+            str(proposal_output),
+        ]
+    ) == 0
+
+    proposal = json.loads(proposal_output.read_text(encoding="utf-8"))
+    assert proposal["title"] == "Require retrieval for context-dependent questions"
+    assert proposal["problem"]["run_id"] == "oi_trace_rag_001"
+
+
+def test_openinference_otlp_attribute_shape_is_supported() -> None:
+    payload = {
+        "resourceSpans": [
+            {
+                "scopeSpans": [
+                    {
+                        "spans": [
+                            {
+                                "traceId": "trace_otlp_001",
+                                "spanId": "span_agent_001",
+                                "name": "agent",
+                                "attributes": [
+                                    {"key": "openinference.span.kind", "value": {"stringValue": "AGENT"}},
+                                    {"key": "input.value", "value": {"stringValue": "According to policy?"}},
+                                ],
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+
+    trace_export = openinference_to_trace_export(payload)
+
+    assert trace_export["runs"][0]["run_id"] == "trace_otlp_001"
+    assert trace_export["runs"][0]["spans"][0]["kind"] == "agent"

@@ -7,6 +7,7 @@ from pathlib import Path
 from jsonschema import ValidationError, validate
 
 from acp.io import dump_data, load_data
+from acp.importers import openinference_to_trace_export
 from acp.proposals import build_proposal
 from acp.replay import compare_replay_results
 from acp.schemas import SCHEMAS
@@ -35,6 +36,12 @@ def main(argv: list[str] | None = None) -> int:
     compare_parser.add_argument("candidate")
     compare_parser.add_argument("--output", required=True)
 
+    import_parser = subparsers.add_parser("import")
+    import_subparsers = import_parser.add_subparsers(dest="import_command", required=True)
+    openinference_parser = import_subparsers.add_parser("openinference")
+    openinference_parser.add_argument("input")
+    openinference_parser.add_argument("--output", required=True)
+
     args = parser.parse_args(argv)
 
     try:
@@ -44,6 +51,8 @@ def main(argv: list[str] | None = None) -> int:
             return _proposal_from_trace(args.trace, args.outcomes, args.surface, args.output)
         if args.command == "replay" and args.replay_command == "compare":
             return _replay_compare(args.baseline, args.candidate, args.output)
+        if args.command == "import" and args.import_command == "openinference":
+            return _import_openinference(args.input, args.output)
     except ValidationError as error:
         print(f"validation failed: {error.message}", file=sys.stderr)
         return 1
@@ -80,6 +89,15 @@ def _replay_compare(baseline_path: str, candidate_path: str, output_path: str) -
     candidate = load_data(candidate_path)
     report = compare_replay_results(baseline, candidate)
     dump_data(Path(output_path), report)
+    print(f"wrote: {output_path}")
+    return 0
+
+
+def _import_openinference(input_path: str, output_path: str) -> int:
+    payload = load_data(input_path)
+    trace_export = openinference_to_trace_export(payload)
+    validate(instance=trace_export, schema=SCHEMAS["trace_export"])
+    dump_data(Path(output_path), trace_export)
     print(f"wrote: {output_path}")
     return 0
 

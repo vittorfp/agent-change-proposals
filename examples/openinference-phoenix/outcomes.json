@@ -1,0 +1,11 @@
+[
+  {
+    "run_id": "oi_trace_rag_001",
+    "timestamp": "2026-10-02T15:30:00Z",
+    "source": "human_review",
+    "label": "failure",
+    "confidence": 0.95,
+    "dimensions": ["groundedness", "policy_compliance"],
+    "notes": "The OpenInference-style trace has no retriever span for a policy-dependent answer."
+  }
+]

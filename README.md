@@ -53,6 +53,7 @@ acp replay compare \
 Then inspect `/tmp/change_proposal.json` and `/tmp/replay_report.json`.
 
 For the full walkthrough, read [docs/first-proposal.md](docs/first-proposal.md).
+For positioning, read [docs/not-an-observability-platform.md](docs/not-an-observability-platform.md).
 
 ## Core Artifacts
 
@@ -69,6 +70,15 @@ The public schema files live in [schemas/](schemas/).
 - [RAG missed retrieval](examples/rag-missed-retrieval)
 - [Tool misuse](examples/tool-misuse)
 - [Missing escalation](examples/missing-escalation)
+- [OpenInference/Phoenix-style import](examples/openinference-phoenix)
+
+## Workflow
+
+```text
+observed runs + outcome signals + improvement surface
+  -> change proposal
+  -> controlled replay report
+```
 
 ## Non-Goals
 
