@@ -72,6 +72,7 @@ The public schema files live in [schemas/](schemas/).
 - [Tool misuse](examples/tool-misuse)
 - [Missing escalation](examples/missing-escalation)
 - [OpenInference/Phoenix-style import](examples/openinference-phoenix)
+- [Langfuse export import](examples/langfuse-export)
 
 ## Workflow
 

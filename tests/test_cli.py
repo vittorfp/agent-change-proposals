@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 from acp.cli import main
-from acp.importers import openinference_to_trace_export
+from acp.importers import langfuse_observations_to_trace_export, openinference_to_trace_export
 from acp.proposals import build_proposal
 from jsonschema import validate
 
@@ -267,3 +267,80 @@ def test_openinference_otlp_attribute_shape_is_supported() -> None:
 
     assert trace_export["runs"][0]["run_id"] == "trace_otlp_001"
     assert trace_export["runs"][0]["spans"][0]["kind"] == "agent"
+
+
+def test_langfuse_import_generates_trace_export(tmp_path: Path) -> None:
+    root = Path(__file__).resolve().parents[1]
+    example = root / "examples/langfuse-export"
+    output = tmp_path / "trace_export.json"
+
+    result = main(
+        [
+            "import",
+            "langfuse",
+            str(example / "observations.langfuse.json"),
+            "--output",
+            str(output),
+        ]
+    )
+
+    assert result == 0
+    trace_export = json.loads(output.read_text(encoding="utf-8"))
+    assert trace_export["runs"][0]["run_id"] == "lf_trace_tool_001"
+    assert trace_export["runs"][0]["spans"][1]["kind"] == "tool"
+
+
+def test_langfuse_import_feeds_proposal_generation(tmp_path: Path) -> None:
+    root = Path(__file__).resolve().parents[1]
+    example = root / "examples/langfuse-export"
+    trace_export = tmp_path / "trace_export.json"
+    proposal_output = tmp_path / "proposal.json"
+
+    assert main(
+        [
+            "import",
+            "langfuse",
+            str(example / "observations.langfuse.json"),
+            "--output",
+            str(trace_export),
+        ]
+    ) == 0
+
+    assert main(
+        [
+            "proposal",
+            "from-trace",
+            str(trace_export),
+            "--outcomes",
+            str(example / "outcomes.json"),
+            "--surface",
+            str(example / "improvement_surface.json"),
+            "--output",
+            str(proposal_output),
+        ]
+    ) == 0
+
+    proposal = json.loads(proposal_output.read_text(encoding="utf-8"))
+    assert proposal["title"] == "Review tool-selection policy for failed tool use"
+    assert proposal["problem"]["run_id"] == "lf_trace_tool_001"
+
+
+def test_langfuse_observations_shape_is_supported() -> None:
+    payload = {
+        "data": [
+            {
+                "id": "obs-1",
+                "traceId": "trace-1",
+                "name": "llm-call",
+                "type": "generation",
+                "input": "hello",
+                "output": "hi",
+            }
+        ],
+        "meta": {"cursor": None},
+    }
+
+    trace_export = langfuse_observations_to_trace_export(payload)
+
+    assert trace_export["runs"][0]["run_id"] == "trace-1"
+    assert trace_export["runs"][0]["spans"][0]["kind"] == "llm"

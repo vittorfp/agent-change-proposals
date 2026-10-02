@@ -1,0 +1,11 @@
+[
+  {
+    "run_id": "lf_trace_tool_001",
+    "timestamp": "2026-10-02T15:45:00Z",
+    "source": "human_review",
+    "label": "failure",
+    "confidence": 0.9,
+    "dimensions": ["tool_use", "tool_selection"],
+    "notes": "The Langfuse observation export shows a refund action tool call for an update-only request."
+  }
+]

@@ -37,6 +37,31 @@ def openinference_to_trace_export(payload: dict[str, Any]) -> dict[str, Any]:
     return {"runs": list(runs.values())}
 
 
+def langfuse_observations_to_trace_export(payload: dict[str, Any]) -> dict[str, Any]:
+    observations = payload.get("data") if isinstance(payload.get("data"), list) else payload.get("observations", [])
+    grouped_observations: dict[str, list[dict[str, Any]]] = defaultdict(list)
+
+    for observation in observations:
+        trace_id = observation.get("traceId") or observation.get("trace_id")
+        if not trace_id:
+            continue
+        grouped_observations[trace_id].append(observation)
+
+    runs = []
+    for trace_id, trace_observations in grouped_observations.items():
+        root = _select_langfuse_root_observation(trace_observations)
+        runs.append(
+            {
+                "run_id": trace_id,
+                "input": {"text": _stringify_io(root.get("input"))},
+                "spans": [_normalize_langfuse_observation(observation) for observation in trace_observations],
+                "final_response": _stringify_io(root.get("output")),
+            }
+        )
+
+    return {"runs": runs}
+
+
 def _extract_spans(payload: dict[str, Any]) -> list[dict[str, Any]]:
     if isinstance(payload.get("spans"), list):
         return payload["spans"]
@@ -46,6 +71,66 @@ def _extract_spans(payload: dict[str, Any]) -> list[dict[str, Any]]:
         for scope_span in resource_span.get("scopeSpans", []):
             spans.extend(scope_span.get("spans", []))
     return spans
+
+
+def _select_langfuse_root_observation(observations: list[dict[str, Any]]) -> dict[str, Any]:
+    for observation in observations:
+        if not (observation.get("parentObservationId") or observation.get("parent_observation_id")):
+            return observation
+    return observations[0] if observations else {}
+
+
+def _normalize_langfuse_observation(observation: dict[str, Any]) -> dict[str, Any]:
+    attributes = {
+        "langfuse.observation.type": observation.get("type"),
+        "langfuse.observation.input": observation.get("input"),
+        "langfuse.observation.output": observation.get("output"),
+    }
+    metadata = observation.get("metadata")
+    if isinstance(metadata, dict):
+        attributes.update({f"langfuse.metadata.{key}": value for key, value in metadata.items()})
+
+    return {
+        "span_id": observation.get("id"),
+        "name": observation.get("name"),
+        "kind": _langfuse_kind(observation),
+        "status": _langfuse_status(observation),
+        "attributes": attributes,
+    }
+
+
+def _langfuse_kind(observation: dict[str, Any]) -> str:
+    metadata = observation.get("metadata") if isinstance(observation.get("metadata"), dict) else {}
+    explicit_kind = metadata.get("openinference.span.kind") or metadata.get("span_kind")
+    if explicit_kind:
+        return str(explicit_kind).lower()
+
+    observation_type = str(observation.get("type") or "").lower()
+    name = str(observation.get("name") or "").lower()
+    if observation_type == "generation":
+        return "llm"
+    if "retriev" in name:
+        return "retriever"
+    if "tool" in name:
+        return "tool"
+    if "guardrail" in name or "escalat" in name or "handoff" in name:
+        return "guardrail"
+    return observation_type or "span"
+
+
+def _langfuse_status(observation: dict[str, Any]) -> str | None:
+    level = observation.get("level")
+    if isinstance(level, str) and level.lower() in {"error", "warning"}:
+        return level.lower()
+    return None
+
+
+def _stringify_io(value: Any) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value
+    return str(value)
 
 
 def _normalize_span(span: dict[str, Any]) -> dict[str, Any]:

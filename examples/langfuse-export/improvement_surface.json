@@ -1,0 +1,15 @@
+{
+  "schema_version": "0.1",
+  "agent_ref": {
+    "name": "langfuse-example-support-actions-agent",
+    "version": "0.1.0"
+  },
+  "allowed_targets": [
+    {
+      "target_id": "tool_policy.refund_actions",
+      "type": "tool_policy",
+      "component": "refund_tool_router",
+      "description": "Rules that decide when refund action tools may be called."
+    }
+  ]
+}

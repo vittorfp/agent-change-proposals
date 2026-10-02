@@ -1,0 +1,35 @@
+{
+  "data": [
+    {
+      "id": "obs-root-001",
+      "traceId": "lf_trace_tool_001",
+      "parentObservationId": null,
+      "name": "support_action_agent",
+      "type": "span",
+      "input": "Send the customer a refund update, but do not issue a refund yet.",
+      "output": "I issued the refund.",
+      "metadata": {
+        "workflow": "refund_update"
+      }
+    },
+    {
+      "id": "obs-tool-001",
+      "traceId": "lf_trace_tool_001",
+      "parentObservationId": "obs-root-001",
+      "name": "issue_refund_tool",
+      "type": "span",
+      "input": "{\"customer_id\":\"cus_123\"}",
+      "output": "{\"status\":\"issued\"}",
+      "level": "ERROR",
+      "metadata": {
+        "span_kind": "TOOL",
+        "tool.name": "issue_refund",
+        "tool.mismatch": true,
+        "tool.expected": "send_customer_update"
+      }
+    }
+  ],
+  "meta": {
+    "cursor": null
+  }
+}

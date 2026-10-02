@@ -75,3 +75,7 @@ For V0, ACP imports only the minimum fields needed to generate a proposal:
 - status;
 - attributes;
 - root input/output values.
+
+ACP also includes a Langfuse export fixture. Langfuse's Observations API returns
+observation rows grouped by `traceId`; ACP converts those rows into the same
+minimal trace export used by proposal generation.
