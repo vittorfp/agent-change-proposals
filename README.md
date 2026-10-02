@@ -1,5 +1,9 @@
 # Agent Change Proposals
 
+[![tests](https://github.com/vittorfp/agent-change-proposals/actions/workflows/test.yml/badge.svg)](https://github.com/vittorfp/agent-change-proposals/actions/workflows/test.yml)
+[![release](https://img.shields.io/github/v/release/vittorfp/agent-change-proposals)](https://github.com/vittorfp/agent-change-proposals/releases)
+[![license](https://img.shields.io/github/license/vittorfp/agent-change-proposals)](LICENSE)
+
 Evidence-backed improvement proposals for AI agents.
 
 Existing observability and eval tools show what happened. This project helps

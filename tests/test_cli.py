@@ -4,13 +4,12 @@ import json
 from pathlib import Path
 
 import pytest
+from jsonschema import validate
+
 from acp.cli import main
 from acp.importers import langfuse_observations_to_trace_export, openinference_to_trace_export
 from acp.proposals import build_proposal
-from jsonschema import validate
-
 from acp.schemas import CHANGE_PROPOSAL_SCHEMA
-
 
 EXAMPLES = [
     ("rag-missed-retrieval", "Require retrieval for context-dependent questions"),

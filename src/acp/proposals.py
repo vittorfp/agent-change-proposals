@@ -4,7 +4,6 @@ import hashlib
 from datetime import datetime, timezone
 from typing import Any
 
-
 RETRIEVAL_KEYWORDS = {
     "according",
     "context",
@@ -51,7 +50,9 @@ def build_proposal(
         if run.get("run_id") in failures and _looks_like_missed_retrieval(run)
     ]
     if missed_retrieval:
-        return _missed_retrieval_proposal(missed_retrieval[0], failures[missed_retrieval[0]["run_id"]], surface, created_at)
+        return _missed_retrieval_proposal(
+            missed_retrieval[0], failures[missed_retrieval[0]["run_id"]], surface, created_at
+        )
 
     return _no_pattern_proposal(trace_export, outcomes, surface, created_at)
 
@@ -91,13 +92,18 @@ def _missed_retrieval_proposal(
             },
         ],
         "hypothesis": {
-            "summary": "The routing or retrieval policy is not requiring retrieval when the user asks for policy, historical, or source-grounded information.",
+            "summary": (
+                "The routing or retrieval policy is not requiring retrieval when the user asks for policy, "
+                "historical, or source-grounded information."
+            ),
             "confidence": "medium",
             "limits": "This is a hypothesis from trace structure and outcome labels, not a causal proof.",
         },
         "proposed_change": {
             "target": target,
-            "summary": "Update the target so context-dependent questions trigger retrieval before final response generation.",
+            "summary": (
+                "Update the target so context-dependent questions trigger retrieval before final response generation."
+            ),
             "suggested_patch": {
                 "require_retrieval_when_input_mentions": sorted(RETRIEVAL_KEYWORDS),
             },
@@ -155,15 +161,23 @@ def _tool_misuse_proposal(
             },
         ],
         "hypothesis": {
-            "summary": "The tool-selection policy may be routing this class of request to the wrong tool or with insufficient preconditions.",
+            "summary": (
+                "The tool-selection policy may be routing this class of request to the wrong tool or with "
+                "insufficient preconditions."
+            ),
             "confidence": "medium",
-            "limits": "This proposal relies on tool span metadata and outcome labels; it should be validated with targeted replay cases.",
+            "limits": (
+                "This proposal relies on tool span metadata and outcome labels; it should be validated with "
+                "targeted replay cases."
+            ),
         },
         "proposed_change": {
             "target": target,
             "summary": "Tighten tool-selection criteria or add a precondition check before invoking the affected tool.",
             "suggested_patch": {
-                "add_precondition": "Only call the tool when required input fields are present and match the task intent.",
+                "add_precondition": (
+                    "Only call the tool when required input fields are present and match the task intent."
+                ),
             },
         },
         "validation": {
@@ -197,7 +211,9 @@ def _missing_escalation_proposal(
         "created_at": created_at,
         "agent_ref": surface.get("agent_ref", {}),
         "problem": {
-            "summary": "A failed run appears to require escalation or guardrail handling, but no escalation span was observed.",
+            "summary": (
+                "A failed run appears to require escalation or guardrail handling, but no escalation span was observed."
+            ),
             "run_id": run["run_id"],
             "outcome_label": outcome.get("label"),
             "outcome_source": outcome.get("source"),
@@ -213,18 +229,26 @@ def _missing_escalation_proposal(
             {
                 "type": "trace_pattern",
                 "run_id": run["run_id"],
-                "observed": "Outcome dimensions indicate escalation or guardrail failure, but no escalation/handoff/guardrail span was found.",
+                "observed": (
+                    "Outcome dimensions indicate escalation or guardrail failure, but no escalation/handoff/"
+                    "guardrail span was found."
+                ),
                 "span_count": len(run.get("spans", [])),
             },
         ],
         "hypothesis": {
-            "summary": "The escalation threshold or guardrail policy may be too permissive for high-risk uncertain answers.",
+            "summary": (
+                "The escalation threshold or guardrail policy may be too permissive for high-risk uncertain answers."
+            ),
             "confidence": "medium",
             "limits": "This identifies a reviewable safety hypothesis, not proof that escalation is always correct.",
         },
         "proposed_change": {
             "target": target,
-            "summary": "Escalate when uncertainty is high and the answer concerns protected, high-risk, or policy-sensitive decisions.",
+            "summary": (
+                "Escalate when uncertainty is high and the answer concerns protected, high-risk, or "
+                "policy-sensitive decisions."
+            ),
             "suggested_patch": {
                 "escalate_when": [
                     "risk_class is high",
@@ -325,7 +349,7 @@ def _select_target(surface: dict[str, Any], preferred_types: set[str] | None = N
 
 
 def _stable_id(run_id: str, target_id: str) -> str:
-    digest = hashlib.sha256(f"{run_id}:{target_id}".encode("utf-8")).hexdigest()[:12]
+    digest = hashlib.sha256(f"{run_id}:{target_id}".encode()).hexdigest()[:12]
     return f"acp_{digest}"
 
 
