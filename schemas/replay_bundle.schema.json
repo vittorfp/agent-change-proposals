@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-change-proposals.dev/schemas/replay_bundle.schema.json",
+  "title": "Replay Bundle",
+  "type": "object",
+  "required": ["suite_id", "cases"],
+  "properties": {
+    "suite_id": { "type": "string" },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["case_id", "passed"],
+        "properties": {
+          "case_id": { "type": "string" },
+          "passed": { "type": "boolean" },
+          "metrics": { "type": "object" },
+          "notes": { "type": "string" }
+        }
+      }
+    }
+  }
+}

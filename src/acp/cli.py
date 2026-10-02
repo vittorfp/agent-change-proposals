@@ -87,6 +87,8 @@ def _proposal_from_trace(trace_path: str, outcomes_path: str, surface_path: str,
 def _replay_compare(baseline_path: str, candidate_path: str, output_path: str) -> int:
     baseline = load_data(baseline_path)
     candidate = load_data(candidate_path)
+    validate(instance=baseline, schema=SCHEMAS["replay_bundle"])
+    validate(instance=candidate, schema=SCHEMAS["replay_bundle"])
     report = compare_replay_results(baseline, candidate)
     dump_data(Path(output_path), report)
     print(f"wrote: {output_path}")

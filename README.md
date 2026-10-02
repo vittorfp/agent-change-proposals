@@ -62,6 +62,7 @@ For positioning, read [docs/not-an-observability-platform.md](docs/not-an-observ
   changing.
 - `change_proposal.yaml`: a reviewable proposal with evidence, hypothesis,
   suggested change, validation plan, risk, and rollback.
+- `replay_bundle.yaml`: controlled baseline/candidate cases for comparison.
 
 The public schema files live in [schemas/](schemas/).
 

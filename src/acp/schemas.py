@@ -101,10 +101,32 @@ TRACE_EXPORT_SCHEMA = {
     },
 }
 
+REPLAY_BUNDLE_SCHEMA = {
+    "type": "object",
+    "required": ["suite_id", "cases"],
+    "properties": {
+        "suite_id": {"type": "string"},
+        "cases": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": ["case_id", "passed"],
+                "properties": {
+                    "case_id": {"type": "string"},
+                    "passed": {"type": "boolean"},
+                    "metrics": {"type": "object"},
+                    "notes": {"type": "string"},
+                },
+            },
+        },
+    },
+}
+
 SCHEMAS = {
     "change_proposal": CHANGE_PROPOSAL_SCHEMA,
     "improvement_surface": IMPROVEMENT_SURFACE_SCHEMA,
     "outcome_events": OUTCOME_EVENTS_SCHEMA,
+    "replay_bundle": REPLAY_BUNDLE_SCHEMA,
     "trace_export": TRACE_EXPORT_SCHEMA,
 }
 
@@ -115,6 +137,7 @@ def load_public_schemas() -> dict[str, dict]:
         "change_proposal": "change_proposal.schema.json",
         "improvement_surface": "improvement_surface.schema.json",
         "outcome_events": "outcome_events.schema.json",
+        "replay_bundle": "replay_bundle.schema.json",
         "trace_export": "trace_export.schema.json",
     }
     loaded = {}

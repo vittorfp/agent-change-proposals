@@ -78,6 +78,18 @@ def test_replay_compare(tmp_path: Path) -> None:
     assert report["summary"]["improved"] == 1
 
 
+def test_validate_example_replay_bundle() -> None:
+    root = Path(__file__).resolve().parents[1]
+    result = main(
+        [
+            "validate",
+            "replay_bundle",
+            str(root / "examples/rag-missed-retrieval/replay_baseline.json"),
+        ]
+    )
+    assert result == 0
+
+
 @pytest.mark.parametrize(("example_name", "expected_title"), EXAMPLES)
 def test_examples_generate_expected_proposals(tmp_path: Path, example_name: str, expected_title: str) -> None:
     root = Path(__file__).resolve().parents[1]

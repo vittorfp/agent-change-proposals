@@ -100,6 +100,12 @@ determinism. It compares controlled cases and produces a reviewable verdict:
 accept, reject, or neutral
 ```
 
+The baseline and candidate inputs are replay bundles. The public schema lives at:
+
+```text
+schemas/replay_bundle.schema.json
+```
+
 ## What This Proves
 
 - The project can generate a structured improvement proposal from concrete
@@ -113,4 +119,3 @@ accept, reject, or neutral
 - It does not guarantee the candidate will improve production behavior.
 - It does not replace observability tools or eval platforms.
 - It does not automate deployment.
-
