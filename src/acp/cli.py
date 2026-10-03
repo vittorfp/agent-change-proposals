@@ -6,6 +6,7 @@ from pathlib import Path
 
 from jsonschema import ValidationError, validate
 
+from acp.examples import verify_examples
 from acp.importers import langfuse_observations_to_trace_export, openinference_to_trace_export
 from acp.io import dump_data, load_data
 from acp.proposals import build_proposal
@@ -46,6 +47,11 @@ def main(argv: list[str] | None = None) -> int:
     langfuse_parser.add_argument("input")
     langfuse_parser.add_argument("--output", required=True)
 
+    examples_parser = subparsers.add_parser("examples")
+    examples_subparsers = examples_parser.add_subparsers(dest="examples_command", required=True)
+    verify_parser = examples_subparsers.add_parser("verify")
+    verify_parser.add_argument("path", nargs="?", default="examples")
+
     args = parser.parse_args(argv)
 
     try:
@@ -59,6 +65,8 @@ def main(argv: list[str] | None = None) -> int:
             return _import_openinference(args.input, args.output)
         if args.command == "import" and args.import_command == "langfuse":
             return _import_langfuse(args.input, args.output)
+        if args.command == "examples" and args.examples_command == "verify":
+            return _examples_verify(args.path)
     except ValidationError as error:
         print(f"validation failed: {error.message}", file=sys.stderr)
         return 1
@@ -118,6 +126,14 @@ def _import_langfuse(input_path: str, output_path: str) -> int:
     validate(instance=trace_export, schema=SCHEMAS["trace_export"])
     dump_data(Path(output_path), trace_export)
     print(f"wrote: {output_path}")
+    return 0
+
+
+def _examples_verify(path: str) -> int:
+    reports = verify_examples(path)
+    for report in reports:
+        replay_suffix = f", replay={report['replay_verdict']}" if "replay_verdict" in report else ""
+        print(f"valid: {report['example']} ({report['title']}{replay_suffix})")
     return 0
 
 

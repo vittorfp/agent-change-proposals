@@ -7,6 +7,7 @@ import pytest
 from jsonschema import validate
 
 from acp.cli import main
+from acp.examples import verify_examples
 from acp.importers import langfuse_observations_to_trace_export, openinference_to_trace_export
 from acp.proposals import build_proposal
 from acp.schemas import CHANGE_PROPOSAL_SCHEMA
@@ -90,6 +91,22 @@ def test_validate_example_replay_bundle() -> None:
         ]
     )
     assert result == 0
+
+
+def test_examples_verify_command() -> None:
+    assert main(["examples", "verify"]) == 0
+
+
+def test_verify_examples_reports_all_examples() -> None:
+    reports = verify_examples(Path(__file__).resolve().parents[1] / "examples")
+
+    assert {report["example"] for report in reports} == {
+        "langfuse-export",
+        "missing-escalation",
+        "openinference-phoenix",
+        "rag-missed-retrieval",
+        "tool-misuse",
+    }
 
 
 @pytest.mark.parametrize(("example_name", "expected_title"), EXAMPLES)

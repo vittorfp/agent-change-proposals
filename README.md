@@ -61,9 +61,13 @@ acp replay compare \
   examples/rag-missed-retrieval/replay_baseline.json \
   examples/rag-missed-retrieval/replay_candidate.json \
   --output /tmp/replay_report.json
+
+acp examples verify
 ```
 
 Then inspect `/tmp/change_proposal.json` and `/tmp/replay_report.json`.
+`acp examples verify` validates every checked-in example and ensures generated
+proposals match the committed `change_proposal.example.json` files.
 
 For the full walkthrough, read [docs/first-proposal.md](docs/first-proposal.md).
 For positioning, read [docs/not-an-observability-platform.md](docs/not-an-observability-platform.md).
