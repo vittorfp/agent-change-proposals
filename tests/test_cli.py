@@ -109,6 +109,22 @@ def test_verify_examples_reports_all_examples() -> None:
     }
 
 
+def test_schema_list_command(capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["schema", "list"]) == 0
+    output = capsys.readouterr().out
+    assert "change_proposal" in output
+    assert "trace_export" in output
+
+
+def test_schema_export_command(tmp_path: Path) -> None:
+    output = tmp_path / "schema.json"
+
+    assert main(["schema", "export", "change_proposal", "--output", str(output)]) == 0
+
+    schema = json.loads(output.read_text(encoding="utf-8"))
+    assert schema["title"] == "Agent Change Proposal"
+
+
 @pytest.mark.parametrize(("example_name", "expected_title"), EXAMPLES)
 def test_examples_generate_expected_proposals(tmp_path: Path, example_name: str, expected_title: str) -> None:
     root = Path(__file__).resolve().parents[1]

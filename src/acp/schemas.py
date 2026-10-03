@@ -150,3 +150,7 @@ def load_public_schemas() -> dict[str, dict]:
 
 
 SCHEMAS = load_public_schemas()
+
+
+def schema_names() -> list[str]:
+    return sorted(SCHEMAS)

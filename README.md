@@ -63,11 +63,16 @@ acp replay compare \
   --output /tmp/replay_report.json
 
 acp examples verify
+
+acp schema list
+acp schema export change_proposal --output /tmp/change_proposal.schema.json
 ```
 
 Then inspect `/tmp/change_proposal.json` and `/tmp/replay_report.json`.
 `acp examples verify` validates every checked-in example and ensures generated
 proposals match the committed `change_proposal.example.json` files.
+`acp schema export` makes schemas available even when ACP is installed outside
+of a source checkout.
 
 For the full walkthrough, read [docs/first-proposal.md](docs/first-proposal.md).
 For positioning, read [docs/not-an-observability-platform.md](docs/not-an-observability-platform.md).

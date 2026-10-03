@@ -18,3 +18,4 @@ jobs:
       - run: acp examples verify
       - run: python -m pytest -q
       - run: python -m build
+      - run: python scripts/check_distribution.py

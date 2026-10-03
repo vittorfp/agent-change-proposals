@@ -45,4 +45,6 @@ python -m pip install -e ".[dev]"
 python -m ruff check .
 acp examples verify
 python -m pytest -q
+python -m build
+python scripts/check_distribution.py
 ```

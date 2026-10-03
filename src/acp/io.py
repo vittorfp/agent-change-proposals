@@ -17,6 +17,9 @@ def load_data(path: str | Path) -> Any:
 
 def dump_data(path: str | Path, data: Any) -> None:
     destination = Path(path)
+    if str(destination) == "-":
+        print(json.dumps(data, indent=2))
+        return
     destination.parent.mkdir(parents=True, exist_ok=True)
     if destination.suffix.lower() in {".yaml", ".yml"}:
         destination.write_text(
@@ -25,4 +28,3 @@ def dump_data(path: str | Path, data: Any) -> None:
         )
         return
     destination.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
-

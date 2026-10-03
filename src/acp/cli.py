@@ -11,7 +11,7 @@ from acp.importers import langfuse_observations_to_trace_export, openinference_t
 from acp.io import dump_data, load_data
 from acp.proposals import build_proposal
 from acp.replay import compare_replay_results
-from acp.schemas import SCHEMAS
+from acp.schemas import SCHEMAS, schema_names
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -52,6 +52,13 @@ def main(argv: list[str] | None = None) -> int:
     verify_parser = examples_subparsers.add_parser("verify")
     verify_parser.add_argument("path", nargs="?", default="examples")
 
+    schema_parser = subparsers.add_parser("schema")
+    schema_subparsers = schema_parser.add_subparsers(dest="schema_command", required=True)
+    schema_subparsers.add_parser("list")
+    export_parser = schema_subparsers.add_parser("export")
+    export_parser.add_argument("schema", choices=schema_names())
+    export_parser.add_argument("--output")
+
     args = parser.parse_args(argv)
 
     try:
@@ -67,6 +74,10 @@ def main(argv: list[str] | None = None) -> int:
             return _import_langfuse(args.input, args.output)
         if args.command == "examples" and args.examples_command == "verify":
             return _examples_verify(args.path)
+        if args.command == "schema" and args.schema_command == "list":
+            return _schema_list()
+        if args.command == "schema" and args.schema_command == "export":
+            return _schema_export(args.schema, args.output)
     except ValidationError as error:
         print(f"validation failed: {error.message}", file=sys.stderr)
         return 1
@@ -134,6 +145,22 @@ def _examples_verify(path: str) -> int:
     for report in reports:
         replay_suffix = f", replay={report['replay_verdict']}" if "replay_verdict" in report else ""
         print(f"valid: {report['example']} ({report['title']}{replay_suffix})")
+    return 0
+
+
+def _schema_list() -> int:
+    for name in schema_names():
+        print(name)
+    return 0
+
+
+def _schema_export(schema_name: str, output_path: str | None) -> int:
+    schema = SCHEMAS[schema_name]
+    if output_path:
+        dump_data(Path(output_path), schema)
+        print(f"wrote: {output_path}")
+    else:
+        dump_data(Path("-"), schema)
     return 0
 
 
