@@ -58,6 +58,7 @@ Then inspect `/tmp/change_proposal.json` and `/tmp/replay_report.json`.
 
 For the full walkthrough, read [docs/first-proposal.md](docs/first-proposal.md).
 For positioning, read [docs/not-an-observability-platform.md](docs/not-an-observability-platform.md).
+For feedback, join [the public discussion](https://github.com/vittorfp/agent-change-proposals/discussions/6).
 
 ## Core Artifacts
 

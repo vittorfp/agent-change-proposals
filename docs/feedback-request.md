@@ -10,6 +10,10 @@ project tries to describe what should change, why, and how to validate it.
 
 Would this artifact be useful in your agent, eval, or observability workflow?
 
+Public discussion:
+
+https://github.com/vittorfp/agent-change-proposals/discussions/6
+
 ## What To Review
 
 - [README](../README.md): project positioning and quickstart.
