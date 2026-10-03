@@ -19,6 +19,8 @@ observability pipelines, or internal agent platforms.
 1. **Collect feedback on the proposal artifact**
    - Discussion: https://github.com/vittorfp/agent-change-proposals/discussions/6
    - Issue: https://github.com/vittorfp/agent-change-proposals/issues/5
+   - Playbook: [docs/feedback-playbook.md](docs/feedback-playbook.md)
+   - Log: [docs/feedback-log.md](docs/feedback-log.md)
 
 2. **Refine the `change_proposal` schema**
    - Improve field names, required evidence, confidence, risk, and validation
@@ -50,4 +52,3 @@ observability pipelines, or internal agent platforms.
 - Automatic code patching.
 - Automatic deployment of behavior changes.
 - Universal agent manifests.
-
