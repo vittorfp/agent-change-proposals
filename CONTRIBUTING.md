@@ -52,6 +52,12 @@ python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e ".[dev]"
 python -m ruff check .
+acp bundle check \
+  --trace examples/rag-missed-retrieval/traces.json \
+  --outcomes examples/rag-missed-retrieval/outcomes.json \
+  --surface examples/rag-missed-retrieval/improvement_surface.json \
+  --baseline examples/rag-missed-retrieval/replay_baseline.json \
+  --candidate examples/rag-missed-retrieval/replay_candidate.json
 acp examples verify
 python -m pytest -q
 python -m build

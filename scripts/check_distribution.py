@@ -4,9 +4,12 @@ import tarfile
 from pathlib import Path
 
 REQUIRED_SDIST_PATHS = [
+    ".github/PULL_REQUEST_TEMPLATE.md",
     ".github/ISSUE_TEMPLATE/workflow-feedback.md",
+    "CODE_OF_CONDUCT.md",
     "CONTRIBUTING.md",
     "ROADMAP.md",
+    "SECURITY.md",
     "docs/feedback-playbook.md",
     "examples/rag-missed-retrieval/change_proposal.example.json",
     "rfcs/0001-change-proposal.md",

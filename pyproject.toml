@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agent-change-proposals"
-version = "0.2.2"
+version = "0.3.0"
 description = "Evidence-backed improvement proposals for AI agents."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -17,6 +17,25 @@ dependencies = [
   "jsonschema>=4.0",
   "PyYAML>=6.0"
 ]
+keywords = ["ai-agents", "evals", "llmops", "observability", "openinference", "replay"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Software Development :: Quality Assurance"
+]
+
+[project.urls]
+Homepage = "https://github.com/vittorfp/agent-change-proposals"
+Repository = "https://github.com/vittorfp/agent-change-proposals"
+Issues = "https://github.com/vittorfp/agent-change-proposals/issues"
+Discussions = "https://github.com/vittorfp/agent-change-proposals/discussions"
+Roadmap = "https://github.com/vittorfp/agent-change-proposals/blob/main/ROADMAP.md"
 
 [project.optional-dependencies]
 dev = [

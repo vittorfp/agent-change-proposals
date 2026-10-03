@@ -11,6 +11,13 @@ REQUIRED_ISSUE_TEMPLATES = {
     "integration-example.md": {"label": "feedback"},
 }
 
+REQUIRED_TRUST_FILES = [
+    "CODE_OF_CONDUCT.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    ".github/PULL_REQUEST_TEMPLATE.md",
+]
+
 
 def _front_matter(path: Path) -> dict[str, str]:
     content = path.read_text(encoding="utf-8")
@@ -36,3 +43,17 @@ def test_issue_templates_are_present_and_actionable() -> None:
         assert data["about"]
         assert data["title"].endswith(": ")
         assert expectation["label"] in data["labels"]
+
+
+def test_trust_files_exist_and_discourage_sensitive_public_data() -> None:
+    root = Path(__file__).resolve().parents[1]
+
+    for filename in REQUIRED_TRUST_FILES:
+        path = root / filename
+        assert path.exists(), f"missing trust file: {filename}"
+        assert path.read_text(encoding="utf-8").strip()
+
+    security = (root / "SECURITY.md").read_text(encoding="utf-8").lower()
+    assert "sensitive" in security
+    assert "traces" in security
+    assert "prompts" in security

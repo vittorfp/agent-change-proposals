@@ -6,6 +6,7 @@ from pathlib import Path
 
 from jsonschema import ValidationError, validate
 
+from acp.checks import check_bundle
 from acp.examples import verify_examples
 from acp.importers import langfuse_observations_to_trace_export, openinference_to_trace_export
 from acp.io import dump_data, load_data
@@ -21,6 +22,17 @@ def main(argv: list[str] | None = None) -> int:
     validate_parser = subparsers.add_parser("validate")
     validate_parser.add_argument("schema", choices=sorted(SCHEMAS))
     validate_parser.add_argument("path")
+
+    bundle_parser = subparsers.add_parser("bundle")
+    bundle_subparsers = bundle_parser.add_subparsers(dest="bundle_command", required=True)
+    check_parser = bundle_subparsers.add_parser("check")
+    check_parser.add_argument("--trace", required=True)
+    check_parser.add_argument("--outcomes", required=True)
+    check_parser.add_argument("--surface", required=True)
+    check_parser.add_argument("--baseline")
+    check_parser.add_argument("--candidate")
+    check_parser.add_argument("--proposal")
+    check_parser.add_argument("--output")
 
     proposal_parser = subparsers.add_parser("proposal")
     proposal_subparsers = proposal_parser.add_subparsers(dest="proposal_command", required=True)
@@ -64,6 +76,16 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.command == "validate":
             return _validate(args.schema, args.path)
+        if args.command == "bundle" and args.bundle_command == "check":
+            return _bundle_check(
+                args.trace,
+                args.outcomes,
+                args.surface,
+                baseline_path=args.baseline,
+                candidate_path=args.candidate,
+                proposal_path=args.proposal,
+                output_path=args.output,
+            )
         if args.command == "proposal" and args.proposal_command == "from-trace":
             return _proposal_from_trace(args.trace, args.outcomes, args.surface, args.output, args.created_at)
         if args.command == "replay" and args.replay_command == "compare":
@@ -91,6 +113,44 @@ def _validate(schema_name: str, path: str) -> int:
     validate(instance=data, schema=SCHEMAS[schema_name])
     print(f"valid: {path}")
     return 0
+
+
+def _bundle_check(
+    trace_path: str,
+    outcomes_path: str,
+    surface_path: str,
+    baseline_path: str | None = None,
+    candidate_path: str | None = None,
+    proposal_path: str | None = None,
+    output_path: str | None = None,
+) -> int:
+    trace_export = load_data(trace_path)
+    outcomes = load_data(outcomes_path)
+    surface = load_data(surface_path)
+    baseline = load_data(baseline_path) if baseline_path else None
+    candidate = load_data(candidate_path) if candidate_path else None
+    proposal = load_data(proposal_path) if proposal_path else None
+
+    validate(instance=trace_export, schema=SCHEMAS["trace_export"])
+    validate(instance=outcomes, schema=SCHEMAS["outcome_events"])
+    validate(instance=surface, schema=SCHEMAS["improvement_surface"])
+    if baseline is not None:
+        validate(instance=baseline, schema=SCHEMAS["replay_bundle"])
+    if candidate is not None:
+        validate(instance=candidate, schema=SCHEMAS["replay_bundle"])
+    if proposal is not None:
+        validate(instance=proposal, schema=SCHEMAS["change_proposal"])
+
+    report = check_bundle(
+        trace_export,
+        outcomes,
+        surface,
+        baseline=baseline,
+        candidate=candidate,
+        proposal=proposal,
+    )
+    dump_data(Path(output_path or "-"), report)
+    return 1 if report["errors"] else 0
 
 
 def _proposal_from_trace(

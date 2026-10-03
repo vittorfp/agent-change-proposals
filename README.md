@@ -7,7 +7,8 @@
 Evidence-backed improvement proposals for AI agents.
 
 Existing observability and eval tools show what happened. This project helps
-describe what should change, why, and how to validate it.
+draft a reviewable hypothesis about what should change, why, and how to
+validate it.
 
 ## What This Is
 
@@ -27,6 +28,35 @@ observation exports. The project is now looking for feedback on whether
 
 See [ROADMAP.md](ROADMAP.md) for current priorities.
 
+## Where This Fits
+
+ACP is meant for the moment after an agent run, eval, or incident review shows
+that behavior should probably change, but before someone edits prompts, tool
+rules, retrieval policy, or guardrails.
+
+```text
+failed run or eval signal
+  -> traces + outcome events + improvement surface
+  -> ACP drafts a candidate change proposal
+  -> reviewer attaches it to a PR, eval review, or incident follow-up
+  -> replay/eval decides whether to accept, revise, or reject the change
+```
+
+The `improvement_surface` is the trust boundary. The owning team declares which
+targets ACP may discuss, for example:
+
+```json
+{
+  "target_id": "retrieval_policy.main",
+  "type": "retrieval_policy",
+  "component": "main_retriever"
+}
+```
+
+ACP can only propose changes to declared targets. V0 schemas are intentionally
+permissive while the project learns from real workflows; examples and the RFC
+show the intended review shape.
+
 ## V0 Flow
 
 ```text
@@ -39,7 +69,7 @@ The first vertical slice focuses on a narrow, concrete case:
 - a RAG-style agent answers a question that appears to require retrieval;
 - the run has a failed outcome signal;
 - the trace shows no retrieval span;
-- the toolkit proposes a routing or retrieval-policy change;
+- the toolkit drafts a routing or retrieval-policy change for review;
 - the proposal includes evidence, risk, validation criteria, and rollback notes.
 
 ## Quickstart
@@ -62,6 +92,13 @@ acp replay compare \
   examples/rag-missed-retrieval/replay_candidate.json \
   --output /tmp/replay_report.json
 
+acp bundle check \
+  --trace examples/rag-missed-retrieval/traces.json \
+  --outcomes examples/rag-missed-retrieval/outcomes.json \
+  --surface examples/rag-missed-retrieval/improvement_surface.json \
+  --baseline examples/rag-missed-retrieval/replay_baseline.json \
+  --candidate examples/rag-missed-retrieval/replay_candidate.json
+
 acp examples verify
 
 acp schema list
@@ -69,6 +106,8 @@ acp schema export change_proposal --output /tmp/change_proposal.schema.json
 ```
 
 Then inspect `/tmp/change_proposal.json` and `/tmp/replay_report.json`.
+`acp bundle check` validates whether the trace, outcomes, surface, and optional
+replay bundles are semantically ready for review, not just schema-valid.
 `acp examples verify` validates every checked-in example and ensures generated
 proposals match the committed `change_proposal.example.json` files.
 `acp schema export` makes schemas available even when ACP is installed outside
@@ -115,8 +154,10 @@ observed runs + outcome signals + improvement surface
 
 The most useful feedback right now is concrete workflow feedback:
 
+- after you find a problematic agent run, how does it become a behavior change?
 - where a `change_proposal` would fit after a failed agent run;
 - which fields are missing, unclear, or too speculative;
+- what would make the proposal trustworthy enough to review;
 - which import path or realistic example would unblock trying ACP.
 
 Use the issue templates for structured feedback, or add a broader comment to

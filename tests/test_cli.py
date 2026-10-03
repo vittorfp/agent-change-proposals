@@ -125,6 +125,105 @@ def test_schema_export_command(tmp_path: Path) -> None:
     assert schema["title"] == "Agent Change Proposal"
 
 
+def test_bundle_check_accepts_example(capsys: pytest.CaptureFixture[str]) -> None:
+    root = Path(__file__).resolve().parents[1]
+
+    result = main(
+        [
+            "bundle",
+            "check",
+            "--trace",
+            str(root / "examples/rag-missed-retrieval/traces.json"),
+            "--outcomes",
+            str(root / "examples/rag-missed-retrieval/outcomes.json"),
+            "--surface",
+            str(root / "examples/rag-missed-retrieval/improvement_surface.json"),
+            "--baseline",
+            str(root / "examples/rag-missed-retrieval/replay_baseline.json"),
+            "--candidate",
+            str(root / "examples/rag-missed-retrieval/replay_candidate.json"),
+        ]
+    )
+
+    assert result == 0
+    report = json.loads(capsys.readouterr().out)
+    assert report["status"] == "passed"
+    assert report["summary"]["errors"] == 0
+
+
+def test_bundle_check_reports_missing_outcome_trace(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
+    root = Path(__file__).resolve().parents[1]
+    outcomes_path = tmp_path / "outcomes.json"
+    outcomes_path.write_text(
+        json.dumps(
+            [
+                    {
+                        "run_id": "missing_run",
+                        "timestamp": "2026-10-01T17:00:00Z",
+                        "source": "human_review",
+                        "label": "failure",
+                        "confidence": 0.9,
+                    }
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    result = main(
+        [
+            "bundle",
+            "check",
+            "--trace",
+            str(root / "examples/rag-missed-retrieval/traces.json"),
+            "--outcomes",
+            str(outcomes_path),
+            "--surface",
+            str(root / "examples/rag-missed-retrieval/improvement_surface.json"),
+        ]
+    )
+
+    assert result == 1
+    report = json.loads(capsys.readouterr().out)
+    assert report["status"] == "failed"
+    assert {error["code"] for error in report["errors"]} == {"outcome.missing_trace"}
+
+
+def test_bundle_check_reports_replay_case_mismatch(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
+    root = Path(__file__).resolve().parents[1]
+    candidate_path = tmp_path / "candidate.json"
+    candidate_path.write_text(
+        json.dumps(
+            {
+                "suite_id": "rag-regression-v0",
+                "cases": [{"case_id": "different_case", "passed": True}],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    result = main(
+        [
+            "bundle",
+            "check",
+            "--trace",
+            str(root / "examples/rag-missed-retrieval/traces.json"),
+            "--outcomes",
+            str(root / "examples/rag-missed-retrieval/outcomes.json"),
+            "--surface",
+            str(root / "examples/rag-missed-retrieval/improvement_surface.json"),
+            "--baseline",
+            str(root / "examples/rag-missed-retrieval/replay_baseline.json"),
+            "--candidate",
+            str(candidate_path),
+        ]
+    )
+
+    assert result == 1
+    report = json.loads(capsys.readouterr().out)
+    assert "replay.no_shared_cases" in {error["code"] for error in report["errors"]}
+    assert "replay.candidate_missing_cases" in {error["code"] for error in report["errors"]}
+
+
 @pytest.mark.parametrize(("example_name", "expected_title"), EXAMPLES)
 def test_examples_generate_expected_proposals(tmp_path: Path, example_name: str, expected_title: str) -> None:
     root = Path(__file__).resolve().parents[1]
