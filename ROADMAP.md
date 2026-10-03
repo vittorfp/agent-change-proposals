@@ -26,6 +26,7 @@ observability pipelines, or internal agent platforms.
    - Improve field names, required evidence, confidence, risk, and validation
      structure based on feedback.
    - Issue: https://github.com/vittorfp/agent-change-proposals/issues/3
+   - Draft RFC: [rfcs/0001-change-proposal.md](rfcs/0001-change-proposal.md)
 
 3. **Improve ecosystem import fidelity**
    - Keep imports file-based for now.

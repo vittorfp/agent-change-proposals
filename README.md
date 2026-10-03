@@ -80,6 +80,7 @@ For outreach and feedback tracking, read [docs/feedback-playbook.md](docs/feedba
 - `replay_bundle.yaml`: controlled baseline/candidate cases for comparison.
 
 The public schema files live in [schemas/](schemas/).
+The draft schema rationale lives in [RFC 0001](rfcs/0001-change-proposal.md).
 
 ## Examples
 
