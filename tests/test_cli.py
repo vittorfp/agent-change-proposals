@@ -157,13 +157,13 @@ def test_bundle_check_reports_missing_outcome_trace(capsys: pytest.CaptureFixtur
     outcomes_path.write_text(
         json.dumps(
             [
-                    {
-                        "run_id": "missing_run",
-                        "timestamp": "2026-10-01T17:00:00Z",
-                        "source": "human_review",
-                        "label": "failure",
-                        "confidence": 0.9,
-                    }
+                {
+                    "run_id": "missing_run",
+                    "timestamp": "2026-10-01T17:00:00Z",
+                    "source": "human_review",
+                    "label": "failure",
+                    "confidence": 0.9,
+                }
             ]
         ),
         encoding="utf-8",
@@ -222,6 +222,123 @@ def test_bundle_check_reports_replay_case_mismatch(capsys: pytest.CaptureFixture
     report = json.loads(capsys.readouterr().out)
     assert "replay.no_shared_cases" in {error["code"] for error in report["errors"]}
     assert "replay.candidate_missing_cases" in {error["code"] for error in report["errors"]}
+
+
+def test_proposal_from_trace_can_write_coverage_report(tmp_path: Path) -> None:
+    root = Path(__file__).resolve().parents[1]
+    proposal_output = tmp_path / "proposal.json"
+    coverage_output = tmp_path / "coverage.json"
+
+    result = main(
+        [
+            "proposal",
+            "from-trace",
+            str(root / "examples/rag-missed-retrieval/traces.json"),
+            "--outcomes",
+            str(root / "examples/rag-missed-retrieval/outcomes.json"),
+            "--surface",
+            str(root / "examples/rag-missed-retrieval/improvement_surface.json"),
+            "--output",
+            str(proposal_output),
+            "--coverage-output",
+            str(coverage_output),
+        ]
+    )
+
+    assert result == 0
+    coverage = json.loads(coverage_output.read_text(encoding="utf-8"))
+    assert coverage["summary"]["failed_outcomes"] == 1
+    assert coverage["summary"]["failed_outcomes_with_trace"] == 1
+    assert coverage["detector_matches"]["missed_retrieval"] == ["run_rag_001"]
+    assert coverage["selected_proposal"]["target_id"] == "retrieval_policy.main"
+
+
+def test_bundle_check_can_include_proposal_coverage_file(
+    capsys: pytest.CaptureFixture[str], tmp_path: Path
+) -> None:
+    root = Path(__file__).resolve().parents[1]
+    proposal_output = tmp_path / "proposal.json"
+    coverage_output = tmp_path / "coverage.json"
+
+    assert main(
+        [
+            "proposal",
+            "from-trace",
+            str(root / "examples/rag-missed-retrieval/traces.json"),
+            "--outcomes",
+            str(root / "examples/rag-missed-retrieval/outcomes.json"),
+            "--surface",
+            str(root / "examples/rag-missed-retrieval/improvement_surface.json"),
+            "--output",
+            str(proposal_output),
+            "--coverage-output",
+            str(coverage_output),
+        ]
+    ) == 0
+    capsys.readouterr()
+
+    assert main(
+        [
+            "bundle",
+            "check",
+            "--trace",
+            str(root / "examples/rag-missed-retrieval/traces.json"),
+            "--outcomes",
+            str(root / "examples/rag-missed-retrieval/outcomes.json"),
+            "--surface",
+            str(root / "examples/rag-missed-retrieval/improvement_surface.json"),
+            "--proposal",
+            str(proposal_output),
+            "--proposal-coverage",
+            str(coverage_output),
+        ]
+    ) == 0
+
+    report = json.loads(capsys.readouterr().out)
+    assert report["proposal_coverage"]["selected_proposal"]["proposal_id"]
+    assert report["summary"]["warnings"] == 0
+
+
+def test_bundle_check_warns_from_import_diagnostics(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
+    root = Path(__file__).resolve().parents[1]
+    diagnostics_path = tmp_path / "diagnostics.json"
+    diagnostics_path.write_text(
+        json.dumps(
+            {
+                "schema_version": "0.1",
+                "source": "openinference",
+                "summary": {
+                    "input_records": 2,
+                    "output_runs": 1,
+                    "output_spans": 1,
+                    "skipped_records": 1,
+                    "warnings": 0,
+                },
+                "skipped_records": [{"reason": "missing_run_id", "count": 1}],
+                "warnings": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    result = main(
+        [
+            "bundle",
+            "check",
+            "--trace",
+            str(root / "examples/rag-missed-retrieval/traces.json"),
+            "--outcomes",
+            str(root / "examples/rag-missed-retrieval/outcomes.json"),
+            "--surface",
+            str(root / "examples/rag-missed-retrieval/improvement_surface.json"),
+            "--import-diagnostics",
+            str(diagnostics_path),
+        ]
+    )
+
+    assert result == 0
+    report = json.loads(capsys.readouterr().out)
+    assert "import.skipped_records" in {warning["code"] for warning in report["warnings"]}
 
 
 @pytest.mark.parametrize(("example_name", "expected_title"), EXAMPLES)
@@ -357,6 +474,47 @@ def test_openinference_import_generates_trace_export(tmp_path: Path) -> None:
     assert trace_export["runs"][0]["spans"][0]["kind"] == "agent"
 
 
+def test_openinference_import_can_write_diagnostics(tmp_path: Path) -> None:
+    payload = {
+        "spans": [
+            {
+                "traceId": "trace-1",
+                "spanId": "span-1",
+                "name": "agent",
+                "attributes": {"input.value": "hello"},
+            },
+            {
+                "spanId": "span-missing-trace",
+                "name": "orphan",
+                "attributes": {},
+            },
+        ]
+    }
+    input_path = tmp_path / "openinference.json"
+    output_path = tmp_path / "trace_export.json"
+    diagnostics_path = tmp_path / "diagnostics.json"
+    input_path.write_text(json.dumps(payload), encoding="utf-8")
+
+    result = main(
+        [
+            "import",
+            "openinference",
+            str(input_path),
+            "--output",
+            str(output_path),
+            "--diagnostics-output",
+            str(diagnostics_path),
+        ]
+    )
+
+    assert result == 0
+    diagnostics = json.loads(diagnostics_path.read_text(encoding="utf-8"))
+    assert diagnostics["summary"]["input_records"] == 2
+    assert diagnostics["summary"]["output_runs"] == 1
+    assert diagnostics["summary"]["skipped_records"] == 1
+    assert diagnostics["skipped_records"] == [{"reason": "missing_run_id", "count": 1}]
+
+
 def test_openinference_import_feeds_proposal_generation(tmp_path: Path) -> None:
     root = Path(__file__).resolve().parents[1]
     example = root / "examples/openinference-phoenix"
@@ -440,6 +598,47 @@ def test_langfuse_import_generates_trace_export(tmp_path: Path) -> None:
     trace_export = json.loads(output.read_text(encoding="utf-8"))
     assert trace_export["runs"][0]["run_id"] == "lf_trace_tool_001"
     assert trace_export["runs"][0]["spans"][1]["kind"] == "tool"
+
+
+def test_langfuse_import_can_write_diagnostics(tmp_path: Path) -> None:
+    payload = {
+        "data": [
+            {
+                "id": "obs-1",
+                "traceId": "trace-1",
+                "name": "llm-call",
+                "type": "generation",
+            },
+            {
+                "id": "obs-missing-trace",
+                "name": "tool-call",
+                "type": "span",
+            },
+        ]
+    }
+    input_path = tmp_path / "langfuse.json"
+    output_path = tmp_path / "trace_export.json"
+    diagnostics_path = tmp_path / "diagnostics.json"
+    input_path.write_text(json.dumps(payload), encoding="utf-8")
+
+    result = main(
+        [
+            "import",
+            "langfuse",
+            str(input_path),
+            "--output",
+            str(output_path),
+            "--diagnostics-output",
+            str(diagnostics_path),
+        ]
+    )
+
+    assert result == 0
+    diagnostics = json.loads(diagnostics_path.read_text(encoding="utf-8"))
+    assert diagnostics["summary"]["input_records"] == 2
+    assert diagnostics["summary"]["output_runs"] == 1
+    assert diagnostics["summary"]["skipped_records"] == 1
+    assert diagnostics["skipped_records"] == [{"reason": "missing_trace_id", "count": 1}]
 
 
 def test_langfuse_import_feeds_proposal_generation(tmp_path: Path) -> None:

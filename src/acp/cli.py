@@ -8,9 +8,12 @@ from jsonschema import ValidationError, validate
 
 from acp.checks import check_bundle
 from acp.examples import verify_examples
-from acp.importers import langfuse_observations_to_trace_export, openinference_to_trace_export
+from acp.importers import (
+    langfuse_observations_to_trace_export_with_diagnostics,
+    openinference_to_trace_export_with_diagnostics,
+)
 from acp.io import dump_data, load_data
-from acp.proposals import build_proposal
+from acp.proposals import build_proposal_with_coverage
 from acp.replay import compare_replay_results
 from acp.schemas import SCHEMAS, schema_names
 
@@ -32,6 +35,8 @@ def main(argv: list[str] | None = None) -> int:
     check_parser.add_argument("--baseline")
     check_parser.add_argument("--candidate")
     check_parser.add_argument("--proposal")
+    check_parser.add_argument("--import-diagnostics")
+    check_parser.add_argument("--proposal-coverage")
     check_parser.add_argument("--output")
 
     proposal_parser = subparsers.add_parser("proposal")
@@ -41,6 +46,7 @@ def main(argv: list[str] | None = None) -> int:
     from_trace_parser.add_argument("--outcomes", required=True)
     from_trace_parser.add_argument("--surface", required=True)
     from_trace_parser.add_argument("--output", required=True)
+    from_trace_parser.add_argument("--coverage-output")
     from_trace_parser.add_argument("--created-at")
 
     replay_parser = subparsers.add_parser("replay")
@@ -55,9 +61,11 @@ def main(argv: list[str] | None = None) -> int:
     openinference_parser = import_subparsers.add_parser("openinference")
     openinference_parser.add_argument("input")
     openinference_parser.add_argument("--output", required=True)
+    openinference_parser.add_argument("--diagnostics-output")
     langfuse_parser = import_subparsers.add_parser("langfuse")
     langfuse_parser.add_argument("input")
     langfuse_parser.add_argument("--output", required=True)
+    langfuse_parser.add_argument("--diagnostics-output")
 
     examples_parser = subparsers.add_parser("examples")
     examples_subparsers = examples_parser.add_subparsers(dest="examples_command", required=True)
@@ -84,16 +92,25 @@ def main(argv: list[str] | None = None) -> int:
                 baseline_path=args.baseline,
                 candidate_path=args.candidate,
                 proposal_path=args.proposal,
+                import_diagnostics_path=args.import_diagnostics,
+                proposal_coverage_path=args.proposal_coverage,
                 output_path=args.output,
             )
         if args.command == "proposal" and args.proposal_command == "from-trace":
-            return _proposal_from_trace(args.trace, args.outcomes, args.surface, args.output, args.created_at)
+            return _proposal_from_trace(
+                args.trace,
+                args.outcomes,
+                args.surface,
+                args.output,
+                coverage_output_path=args.coverage_output,
+                created_at=args.created_at,
+            )
         if args.command == "replay" and args.replay_command == "compare":
             return _replay_compare(args.baseline, args.candidate, args.output)
         if args.command == "import" and args.import_command == "openinference":
-            return _import_openinference(args.input, args.output)
+            return _import_openinference(args.input, args.output, args.diagnostics_output)
         if args.command == "import" and args.import_command == "langfuse":
-            return _import_langfuse(args.input, args.output)
+            return _import_langfuse(args.input, args.output, args.diagnostics_output)
         if args.command == "examples" and args.examples_command == "verify":
             return _examples_verify(args.path)
         if args.command == "schema" and args.schema_command == "list":
@@ -122,6 +139,8 @@ def _bundle_check(
     baseline_path: str | None = None,
     candidate_path: str | None = None,
     proposal_path: str | None = None,
+    import_diagnostics_path: str | None = None,
+    proposal_coverage_path: str | None = None,
     output_path: str | None = None,
 ) -> int:
     trace_export = load_data(trace_path)
@@ -130,6 +149,8 @@ def _bundle_check(
     baseline = load_data(baseline_path) if baseline_path else None
     candidate = load_data(candidate_path) if candidate_path else None
     proposal = load_data(proposal_path) if proposal_path else None
+    import_diagnostics = load_data(import_diagnostics_path) if import_diagnostics_path else None
+    proposal_coverage = load_data(proposal_coverage_path) if proposal_coverage_path else None
 
     validate(instance=trace_export, schema=SCHEMAS["trace_export"])
     validate(instance=outcomes, schema=SCHEMAS["outcome_events"])
@@ -148,13 +169,20 @@ def _bundle_check(
         baseline=baseline,
         candidate=candidate,
         proposal=proposal,
+        import_diagnostics=import_diagnostics,
+        proposal_coverage=proposal_coverage,
     )
     dump_data(Path(output_path or "-"), report)
     return 1 if report["errors"] else 0
 
 
 def _proposal_from_trace(
-    trace_path: str, outcomes_path: str, surface_path: str, output_path: str, created_at: str | None = None
+    trace_path: str,
+    outcomes_path: str,
+    surface_path: str,
+    output_path: str,
+    coverage_output_path: str | None = None,
+    created_at: str | None = None,
 ) -> int:
     trace_export = load_data(trace_path)
     outcomes = load_data(outcomes_path)
@@ -164,9 +192,12 @@ def _proposal_from_trace(
     validate(instance=outcomes, schema=SCHEMAS["outcome_events"])
     validate(instance=surface, schema=SCHEMAS["improvement_surface"])
 
-    proposal = build_proposal(trace_export, outcomes, surface, created_at=created_at)
+    proposal, coverage = build_proposal_with_coverage(trace_export, outcomes, surface, created_at=created_at)
     validate(instance=proposal, schema=SCHEMAS["change_proposal"])
     dump_data(Path(output_path), proposal)
+    if coverage_output_path:
+        dump_data(Path(coverage_output_path), coverage)
+        print(f"wrote: {coverage_output_path}")
     print(f"wrote: {output_path}")
     return 0
 
@@ -182,20 +213,26 @@ def _replay_compare(baseline_path: str, candidate_path: str, output_path: str) -
     return 0
 
 
-def _import_openinference(input_path: str, output_path: str) -> int:
+def _import_openinference(input_path: str, output_path: str, diagnostics_output_path: str | None = None) -> int:
     payload = load_data(input_path)
-    trace_export = openinference_to_trace_export(payload)
+    trace_export, diagnostics = openinference_to_trace_export_with_diagnostics(payload)
     validate(instance=trace_export, schema=SCHEMAS["trace_export"])
     dump_data(Path(output_path), trace_export)
+    if diagnostics_output_path:
+        dump_data(Path(diagnostics_output_path), diagnostics)
+        print(f"wrote: {diagnostics_output_path}")
     print(f"wrote: {output_path}")
     return 0
 
 
-def _import_langfuse(input_path: str, output_path: str) -> int:
+def _import_langfuse(input_path: str, output_path: str, diagnostics_output_path: str | None = None) -> int:
     payload = load_data(input_path)
-    trace_export = langfuse_observations_to_trace_export(payload)
+    trace_export, diagnostics = langfuse_observations_to_trace_export_with_diagnostics(payload)
     validate(instance=trace_export, schema=SCHEMAS["trace_export"])
     dump_data(Path(output_path), trace_export)
+    if diagnostics_output_path:
+        dump_data(Path(diagnostics_output_path), diagnostics)
+        print(f"wrote: {diagnostics_output_path}")
     print(f"wrote: {output_path}")
     return 0
 

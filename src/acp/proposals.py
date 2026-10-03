@@ -27,34 +27,90 @@ def build_proposal(
     surface: dict[str, Any],
     created_at: str | None = None,
 ) -> dict[str, Any]:
+    proposal, _coverage = build_proposal_with_coverage(trace_export, outcomes, surface, created_at=created_at)
+    return proposal
+
+
+def build_proposal_with_coverage(
+    trace_export: dict[str, Any],
+    outcomes: list[dict[str, Any]],
+    surface: dict[str, Any],
+    created_at: str | None = None,
+) -> tuple[dict[str, Any], dict[str, Any]]:
     created_at = created_at or datetime.now(timezone.utc).isoformat()
     failures = {event["run_id"]: event for event in outcomes if event.get("label") == "failure"}
+    runs_by_id = {run.get("run_id"): run for run in trace_export.get("runs", []) if run.get("run_id")}
     tool_misuse = [
         run for run in trace_export.get("runs", [])
         if run.get("run_id") in failures and _looks_like_tool_misuse(run, failures[run["run_id"]])
     ]
+    detector_matches: dict[str, list[dict[str, Any]]] = {"tool_misuse": tool_misuse}
     if tool_misuse:
-        return _tool_misuse_proposal(tool_misuse[0], failures[tool_misuse[0]["run_id"]], surface, created_at)
+        proposal = _tool_misuse_proposal(tool_misuse[0], failures[tool_misuse[0]["run_id"]], surface, created_at)
+        return proposal, _coverage_report(trace_export, outcomes, runs_by_id, proposal, detector_matches)
 
     missing_escalation = [
         run for run in trace_export.get("runs", [])
         if run.get("run_id") in failures and _looks_like_missing_escalation(run, failures[run["run_id"]])
     ]
+    detector_matches["missing_escalation"] = missing_escalation
     if missing_escalation:
-        return _missing_escalation_proposal(
+        proposal = _missing_escalation_proposal(
             missing_escalation[0], failures[missing_escalation[0]["run_id"]], surface, created_at
         )
+        return proposal, _coverage_report(trace_export, outcomes, runs_by_id, proposal, detector_matches)
 
     missed_retrieval = [
         run for run in trace_export.get("runs", [])
         if run.get("run_id") in failures and _looks_like_missed_retrieval(run)
     ]
+    detector_matches["missed_retrieval"] = missed_retrieval
     if missed_retrieval:
-        return _missed_retrieval_proposal(
+        proposal = _missed_retrieval_proposal(
             missed_retrieval[0], failures[missed_retrieval[0]["run_id"]], surface, created_at
         )
+        return proposal, _coverage_report(trace_export, outcomes, runs_by_id, proposal, detector_matches)
 
-    return _no_pattern_proposal(trace_export, outcomes, surface, created_at)
+    proposal = _no_pattern_proposal(trace_export, outcomes, surface, created_at)
+    return proposal, _coverage_report(trace_export, outcomes, runs_by_id, proposal, detector_matches)
+
+
+def _coverage_report(
+    trace_export: dict[str, Any],
+    outcomes: list[dict[str, Any]],
+    runs_by_id: dict[str, dict[str, Any]],
+    proposal: dict[str, Any],
+    detector_matches: dict[str, list[dict[str, Any]]],
+) -> dict[str, Any]:
+    failed_run_ids = [event["run_id"] for event in outcomes if event.get("label") == "failure"]
+    matched_failed_run_ids = sorted(run_id for run_id in failed_run_ids if run_id in runs_by_id)
+    detector_match_run_ids = {
+        name: sorted(run["run_id"] for run in matches if run.get("run_id"))
+        for name, matches in detector_matches.items()
+    }
+    selected_run_id = proposal.get("problem", {}).get("run_id")
+    matched_by_any_detector = set().union(*[set(run_ids) for run_ids in detector_match_run_ids.values()])
+
+    return {
+        "schema_version": "0.1",
+        "summary": {
+            "runs": len(trace_export.get("runs", [])),
+            "outcomes": len(outcomes),
+            "failed_outcomes": len(failed_run_ids),
+            "failed_outcomes_with_trace": len(matched_failed_run_ids),
+            "detector_matches": sum(len(run_ids) for run_ids in detector_match_run_ids.values()),
+        },
+        "failed_run_ids": failed_run_ids,
+        "failed_run_ids_missing_trace": sorted(run_id for run_id in failed_run_ids if run_id not in runs_by_id),
+        "failed_run_ids_without_detector_match": sorted(set(matched_failed_run_ids) - matched_by_any_detector),
+        "detector_matches": detector_match_run_ids,
+        "selected_proposal": {
+            "proposal_id": proposal.get("proposal_id"),
+            "title": proposal.get("title"),
+            "run_id": selected_run_id,
+            "target_id": proposal.get("proposed_change", {}).get("target", {}).get("target_id"),
+        },
+    }
 
 
 def _missed_retrieval_proposal(

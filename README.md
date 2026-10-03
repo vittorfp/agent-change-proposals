@@ -85,7 +85,8 @@ acp proposal from-trace \
   examples/rag-missed-retrieval/traces.json \
   --outcomes examples/rag-missed-retrieval/outcomes.json \
   --surface examples/rag-missed-retrieval/improvement_surface.json \
-  --output /tmp/change_proposal.json
+  --output /tmp/change_proposal.json \
+  --coverage-output /tmp/proposal_coverage.json
 
 acp replay compare \
   examples/rag-missed-retrieval/replay_baseline.json \
@@ -106,6 +107,8 @@ acp schema export change_proposal --output /tmp/change_proposal.schema.json
 ```
 
 Then inspect `/tmp/change_proposal.json` and `/tmp/replay_report.json`.
+`--coverage-output` explains how many failed outcomes had trace coverage, which
+detectors matched, and which proposal was selected.
 `acp bundle check` validates whether the trace, outcomes, surface, and optional
 replay bundles are semantically ready for review, not just schema-valid.
 `acp examples verify` validates every checked-in example and ensures generated
@@ -141,6 +144,17 @@ The draft schema rationale lives in [RFC 0001](rfcs/0001-change-proposal.md).
 
 Each example includes a checked-in `change_proposal.example.json` so reviewers
 can inspect the output without running the CLI.
+
+Import commands can also write diagnostics:
+
+```bash
+acp import openinference examples/openinference-phoenix/traces.openinference.json \
+  --output /tmp/trace_export.json \
+  --diagnostics-output /tmp/import_diagnostics.json
+```
+
+Diagnostics report input record counts, output run/span counts, and skipped
+records such as spans or observations that lack a run/trace ID.
 
 ## Workflow
 

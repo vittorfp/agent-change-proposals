@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from acp.proposals import build_proposal
+from acp.proposals import build_proposal_with_coverage
 
 
 def check_bundle(
@@ -12,6 +12,8 @@ def check_bundle(
     baseline: dict[str, Any] | None = None,
     candidate: dict[str, Any] | None = None,
     proposal: dict[str, Any] | None = None,
+    import_diagnostics: dict[str, Any] | None = None,
+    proposal_coverage: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     errors: list[dict[str, str]] = []
     warnings: list[dict[str, str]] = []
@@ -44,7 +46,14 @@ def check_bundle(
 
     _check_replay(errors, warnings, baseline, candidate)
 
-    generated_proposal = proposal or build_proposal(trace_export, outcomes, surface)
+    if import_diagnostics:
+        _check_import_diagnostics(warnings, import_diagnostics)
+
+    generated_proposal, generated_coverage = build_proposal_with_coverage(trace_export, outcomes, surface)
+    if proposal is not None:
+        generated_proposal = proposal
+    coverage = proposal_coverage or generated_coverage
+    _check_proposal_coverage(warnings, coverage)
     _check_proposal(errors, warnings, generated_proposal, target_ids)
 
     return {
@@ -59,7 +68,36 @@ def check_bundle(
         },
         "errors": errors,
         "warnings": warnings,
+        "proposal_coverage": coverage,
     }
+
+
+def _check_import_diagnostics(warnings: list[dict[str, str]], diagnostics: dict[str, Any]) -> None:
+    skipped_records = diagnostics.get("summary", {}).get("skipped_records", 0)
+    if skipped_records:
+        _add(
+            warnings,
+            "import.skipped_records",
+            f"Importer skipped {skipped_records} records; inspect import diagnostics for reasons.",
+        )
+
+
+def _check_proposal_coverage(warnings: list[dict[str, str]], coverage: dict[str, Any]) -> None:
+    missing_trace = coverage.get("failed_run_ids_missing_trace", [])
+    if missing_trace:
+        _add(
+            warnings,
+            "coverage.failed_outcomes_missing_trace",
+            "Failed outcomes missing trace coverage: " + ", ".join(missing_trace),
+        )
+
+    unmatched = coverage.get("failed_run_ids_without_detector_match", [])
+    if unmatched:
+        _add(
+            warnings,
+            "coverage.failed_outcomes_unmatched",
+            "Failed traced runs without detector matches: " + ", ".join(unmatched),
+        )
 
 
 def _check_replay(

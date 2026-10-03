@@ -5,14 +5,24 @@ from typing import Any
 
 
 def openinference_to_trace_export(payload: dict[str, Any]) -> dict[str, Any]:
+    trace_export, _diagnostics = openinference_to_trace_export_with_diagnostics(payload)
+    return trace_export
+
+
+def openinference_to_trace_export_with_diagnostics(payload: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
     spans = _extract_spans(payload)
     runs: dict[str, dict[str, Any]] = {}
     grouped_spans: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    skipped_missing_run_id = 0
+    missing_kind_or_name = 0
 
     for span in spans:
         normalized = _normalize_span(span)
+        if not normalized.get("kind") and not normalized.get("name"):
+            missing_kind_or_name += 1
         run_id = normalized.get("trace_id") or normalized.get("run_id")
         if not run_id:
+            skipped_missing_run_id += 1
             continue
         grouped_spans[run_id].append(normalized)
 
@@ -34,17 +44,39 @@ def openinference_to_trace_export(payload: dict[str, Any]) -> dict[str, Any]:
             "final_response": _extract_output_text(root_span),
         }
 
-    return {"runs": list(runs.values())}
+    trace_export = {"runs": list(runs.values())}
+    diagnostics = _import_diagnostics(
+        source="openinference",
+        input_records=len(spans),
+        output_runs=len(trace_export["runs"]),
+        output_spans=sum(len(run.get("spans", [])) for run in trace_export["runs"]),
+        skipped_records=[{"reason": "missing_run_id", "count": skipped_missing_run_id}],
+        warnings=[{"code": "span.missing_kind_or_name", "count": missing_kind_or_name}],
+    )
+    return trace_export, diagnostics
 
 
 def langfuse_observations_to_trace_export(payload: dict[str, Any]) -> dict[str, Any]:
+    trace_export, _diagnostics = langfuse_observations_to_trace_export_with_diagnostics(payload)
+    return trace_export
+
+
+def langfuse_observations_to_trace_export_with_diagnostics(
+    payload: dict[str, Any],
+) -> tuple[dict[str, Any], dict[str, Any]]:
     observations = payload.get("data") if isinstance(payload.get("data"), list) else payload.get("observations", [])
     grouped_observations: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    skipped_missing_trace_id = 0
+    missing_kind_or_name = 0
 
     for observation in observations:
         trace_id = observation.get("traceId") or observation.get("trace_id")
         if not trace_id:
+            skipped_missing_trace_id += 1
             continue
+        normalized = _normalize_langfuse_observation(observation)
+        if not normalized.get("kind") and not normalized.get("name"):
+            missing_kind_or_name += 1
         grouped_observations[trace_id].append(observation)
 
     runs = []
@@ -59,7 +91,41 @@ def langfuse_observations_to_trace_export(payload: dict[str, Any]) -> dict[str, 
             }
         )
 
-    return {"runs": runs}
+    trace_export = {"runs": runs}
+    diagnostics = _import_diagnostics(
+        source="langfuse",
+        input_records=len(observations),
+        output_runs=len(runs),
+        output_spans=sum(len(run.get("spans", [])) for run in runs),
+        skipped_records=[{"reason": "missing_trace_id", "count": skipped_missing_trace_id}],
+        warnings=[{"code": "span.missing_kind_or_name", "count": missing_kind_or_name}],
+    )
+    return trace_export, diagnostics
+
+
+def _import_diagnostics(
+    source: str,
+    input_records: int,
+    output_runs: int,
+    output_spans: int,
+    skipped_records: list[dict[str, Any]],
+    warnings: list[dict[str, Any]],
+) -> dict[str, Any]:
+    skipped_total = sum(item["count"] for item in skipped_records)
+    warning_total = sum(item["count"] for item in warnings)
+    return {
+        "schema_version": "0.1",
+        "source": source,
+        "summary": {
+            "input_records": input_records,
+            "output_runs": output_runs,
+            "output_spans": output_spans,
+            "skipped_records": skipped_total,
+            "warnings": warning_total,
+        },
+        "skipped_records": [item for item in skipped_records if item["count"]],
+        "warnings": [item for item in warnings if item["count"]],
+    }
 
 
 def _extract_spans(payload: dict[str, Any]) -> list[dict[str, Any]]:
