@@ -4,6 +4,7 @@ import tarfile
 from pathlib import Path
 
 REQUIRED_SDIST_PATHS = [
+    ".github/ISSUE_TEMPLATE/workflow-feedback.md",
     "CONTRIBUTING.md",
     "ROADMAP.md",
     "docs/feedback-playbook.md",

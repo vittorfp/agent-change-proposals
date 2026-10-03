@@ -28,6 +28,15 @@ behavior.
 - Importers for existing trace or eval exports.
 - Replay/reporting improvements that make validation clearer.
 
+## Feedback And Schema Changes
+
+Use the issue templates when possible. Workflow feedback, schema gaps, and
+integration/example requests each ask for slightly different evidence.
+
+Schema changes should point to real feedback or a concrete fixture. Prefer
+adding examples or documentation first when the current schema can represent the
+workflow but the explanation is unclear.
+
 ## Contributions To Avoid For Now
 
 - New agent runtimes or orchestration frameworks.

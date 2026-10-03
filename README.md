@@ -76,8 +76,9 @@ of a source checkout.
 
 For the full walkthrough, read [docs/first-proposal.md](docs/first-proposal.md).
 For positioning, read [docs/not-an-observability-platform.md](docs/not-an-observability-platform.md).
-For feedback, join [the public discussion](https://github.com/vittorfp/agent-change-proposals/discussions/6).
-For outreach and feedback tracking, read [docs/feedback-playbook.md](docs/feedback-playbook.md).
+For feedback, join [the public discussion](https://github.com/vittorfp/agent-change-proposals/discussions/6),
+open a workflow/schema issue using the GitHub issue templates, or read
+[docs/feedback-playbook.md](docs/feedback-playbook.md).
 
 ## Core Artifacts
 
@@ -109,6 +110,17 @@ observed runs + outcome signals + improvement surface
   -> change proposal
   -> controlled replay report
 ```
+
+## Feedback Wanted
+
+The most useful feedback right now is concrete workflow feedback:
+
+- where a `change_proposal` would fit after a failed agent run;
+- which fields are missing, unclear, or too speculative;
+- which import path or realistic example would unblock trying ACP.
+
+Use the issue templates for structured feedback, or add a broader comment to
+[the public discussion](https://github.com/vittorfp/agent-change-proposals/discussions/6).
 
 ## Non-Goals
 

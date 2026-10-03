@@ -1,6 +1,6 @@
 ---
-name: Feedback
-about: Share feedback on the proposal format, examples, or workflow
+name: General feedback
+about: Share feedback that does not fit a more specific template
 title: "Feedback: "
 labels: feedback
 assignees: ""
@@ -8,7 +8,7 @@ assignees: ""
 
 ## Context
 
-What kind of agent/eval/observability workflow are you thinking about?
+What kind of agent, eval, observability, or review workflow are you thinking about?
 
 ## What Felt Useful
 
@@ -21,4 +21,3 @@ What fields, assumptions, or steps would block adoption?
 ## Existing Tools
 
 Which current tool or workflow already handles this for you?
-

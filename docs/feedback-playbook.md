@@ -69,6 +69,22 @@ Ask concrete workflow questions, not broad opinion questions.
 7. Which existing tool already solves this for you?
 8. What should ACP integrate with first?
 
+## Where Feedback Should Land
+
+Prefer public, linkable feedback when possible:
+
+- broad positioning or "does this need to exist?" feedback belongs in the
+  public GitHub discussion;
+- concrete workflow feedback belongs in the workflow feedback issue template;
+- repeated missing fields or confusing schema semantics belong in the schema
+  gap issue template;
+- importer requests or realistic sanitized fixtures belong in the
+  integration/example issue template.
+
+Private feedback is still useful. Summarize it in [feedback-log.md](feedback-log.md)
+without copying sensitive traces, prompts, customer data, or proprietary tool
+exports.
+
 ## How To Classify Feedback
 
 Record feedback in [feedback-log.md](feedback-log.md) using these categories:
@@ -89,4 +105,3 @@ the same gap, or when one reviewer provides a concrete workflow that the current
 schema cannot represent.
 
 Prefer adding examples or docs before adding schema fields.
-
