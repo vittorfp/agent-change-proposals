@@ -18,6 +18,15 @@ It is not an observability platform, agent runtime, prompt optimizer, or a new
 telemetry standard. It is intended to sit after tools such as OpenTelemetry,
 OpenInference, Phoenix, Langfuse, LangSmith, or custom eval pipelines.
 
+## Current Status
+
+ACP has a working local CLI, public schemas, checked-in examples, and
+file-based import paths for OpenInference/Phoenix-style spans and Langfuse
+observation exports. The project is now looking for feedback on whether
+`change_proposal` is a useful review artifact.
+
+See [ROADMAP.md](ROADMAP.md) for current priorities.
+
 ## V0 Flow
 
 ```text
