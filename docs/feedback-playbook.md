@@ -30,7 +30,10 @@ Existing observability/eval tools show what happened. This tries to describe
 what should change, why, and how to validate it.
 
 The artifact I want feedback on is this example proposal:
-https://github.com/vittorfp/agent-change-proposals/blob/main/examples/rag-missed-retrieval/change_proposal.example.json
+https://github.com/vittorfp/agent-change-proposals/blob/main/examples/declared-intent/change_proposal.example.json
+
+Latest release:
+https://github.com/vittorfp/agent-change-proposals/releases/tag/v0.5.0
 
 Would something like this be useful in your agent review/eval workflow, or is
 it solving the wrong problem?
@@ -49,11 +52,17 @@ important, what change is suggested, what evidence supports it, and how to
 validate/rollback it.
 
 Repo: https://github.com/vittorfp/agent-change-proposals
+Latest release: https://github.com/vittorfp/agent-change-proposals/releases/tag/v0.5.0
+Example proposal: https://github.com/vittorfp/agent-change-proposals/blob/main/examples/declared-intent/change_proposal.example.json
 Discussion: https://github.com/vittorfp/agent-change-proposals/discussions/6
 
 I would love practical feedback: would this artifact fit your PR/CI/eval
 workflow? What fields are missing or too speculative?
 ```
+
+For the current outreach sprint, use
+[feedback-sprint-2026-10-04.md](feedback-sprint-2026-10-04.md) to keep channel
+targets, ambient signals, and draft posts together.
 
 ## Questions To Ask
 

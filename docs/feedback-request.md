@@ -23,8 +23,15 @@ https://github.com/vittorfp/agent-change-proposals/discussions/6
   boundaries and ecosystem fit.
 - [Change proposal schema](../schemas/change_proposal.schema.json): the core
   artifact.
+- [Declared intent example](../examples/declared-intent/change_proposal.example.json):
+  the current best review example, including optional manifest/context
+  contracts.
 - [Examples](../examples): missed retrieval, tool misuse, and missing
   escalation.
+
+Latest release:
+
+https://github.com/vittorfp/agent-change-proposals/releases/tag/v0.5.0
 
 ## Feedback I Am Looking For
 
@@ -47,6 +54,8 @@ The first version is intentionally small: observed run + outcome signal +
 allowed improvement surface -> reviewable `change_proposal`.
 
 Repo: https://github.com/vittorfp/agent-change-proposals
+Example proposal: https://github.com/vittorfp/agent-change-proposals/blob/main/examples/declared-intent/change_proposal.example.json
+Latest release: https://github.com/vittorfp/agent-change-proposals/releases/tag/v0.5.0
 
 I would love feedback from people running agent evals, observability pipelines,
 or internal agent platforms: would this artifact help you review behavior

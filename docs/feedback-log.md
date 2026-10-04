@@ -10,6 +10,19 @@ messages. Link back to public sources when possible.
 - Strongest adoption blocker: _none yet_
 - Schema changes justified by repeated feedback: _none yet_
 
+## Ambient Signals
+
+Ambient signals are public workflow pains that look relevant to ACP but are not
+direct feedback on the project.
+
+| Date | Source | Category | Signal | Action |
+| --- | --- | --- | --- | --- |
+| 2026-10-04 | [LangChain forum: online evals on multi-agent traces](https://forum.langchain.com/t/custom-code-online-evals-on-multi-agent-system-traces-not-seeing-sub-agent-tool-calls-or-any-ids-or-details-about-child-runs/2026) | integration-gap | Multi-agent eval workflows can lose visibility into sub-agent tool calls and child-run details. | Ask whether proposal coverage and import diagnostics would make incomplete evidence visible enough for review. |
+| 2026-10-04 | [LangChain forum: evals across multiple LangSmith projects](https://forum.langchain.com/t/how-are-teams-handling-evals-when-agent-pipelines-span-multiple-langsmith-projects/3300) | artifact-fit | Multi-agent pipelines can span projects and teams, fragmenting debugging and release confidence. | Test whether a portable `change_proposal` helps coordinate review across system boundaries. |
+| 2026-10-04 | [Reddit r/LangChain: testing AI agents before deploying](https://www.reddit.com/r/LangChain/comments/1wsduk3/how_are_you_testing_ai_agents_before_deploying/) | trust-gap | Agent testing discussions emphasize tool/API use, data access, auth boundaries, escalation, and intermediate behavior. | Keep examples focused on evidence, allowed surfaces, validation criteria, risk, and rollback instead of only final answers. |
+| 2026-10-04 | [Langfuse community](https://langfuse.com/community) | integration-gap | Langfuse has active observability/eval community channels. | Use as a feedback target for whether ACP belongs downstream of existing observability workflows. |
+| 2026-10-04 | [Phoenix docs](https://arize.com/docs/phoenix/) | integration-gap | Phoenix/OpenInference workflows already center traces, evals, experiments, and OpenTelemetry/OpenInference concepts. | Ask what OpenInference fields are required for trustworthy proposal generation. |
+
 ## Feedback Items
 
 | Date | Source | Reviewer Context | Category | Signal | Action |
@@ -25,4 +38,3 @@ messages. Link back to public sources when possible.
 - Should validation criteria become structured objects instead of strings?
 - Which importer should become more faithful first: OpenInference/Phoenix or
   Langfuse?
-
