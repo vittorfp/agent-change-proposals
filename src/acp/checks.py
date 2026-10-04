@@ -12,6 +12,8 @@ def check_bundle(
     baseline: dict[str, Any] | None = None,
     candidate: dict[str, Any] | None = None,
     proposal: dict[str, Any] | None = None,
+    agent_manifest: dict[str, Any] | None = None,
+    domain_context: dict[str, Any] | None = None,
     import_diagnostics: dict[str, Any] | None = None,
     proposal_coverage: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
@@ -49,7 +51,13 @@ def check_bundle(
     if import_diagnostics:
         _check_import_diagnostics(warnings, import_diagnostics)
 
-    generated_proposal, generated_coverage = build_proposal_with_coverage(trace_export, outcomes, surface)
+    generated_proposal, generated_coverage = build_proposal_with_coverage(
+        trace_export,
+        outcomes,
+        surface,
+        agent_manifest=agent_manifest,
+        domain_context=domain_context,
+    )
     if proposal is not None:
         generated_proposal = proposal
     coverage = proposal_coverage or generated_coverage

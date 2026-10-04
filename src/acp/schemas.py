@@ -122,8 +122,82 @@ REPLAY_BUNDLE_SCHEMA = {
     },
 }
 
+AGENT_MANIFEST_SCHEMA = {
+    "type": "object",
+    "required": ["schema_version", "agent_ref"],
+    "properties": {
+        "schema_version": {"type": "string"},
+        "agent_ref": {"type": "object"},
+        "description": {"type": "string"},
+        "components": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": ["component_id", "type"],
+                "properties": {
+                    "component_id": {"type": "string"},
+                    "type": {
+                        "enum": [
+                            "llm",
+                            "router",
+                            "retriever",
+                            "tool",
+                            "memory",
+                            "guardrail",
+                            "prompt",
+                            "config",
+                        ]
+                    },
+                    "description": {"type": "string"},
+                    "depends_on": {"type": "array", "items": {"type": "string"}},
+                },
+            },
+        },
+        "limits": {"type": "array", "items": {"type": "string"}},
+    },
+}
+
+DOMAIN_CONTEXT_SCHEMA = {
+    "type": "object",
+    "required": ["schema_version", "domain_ref"],
+    "properties": {
+        "schema_version": {"type": "string"},
+        "domain_ref": {"type": "object"},
+        "narrative": {"type": "string"},
+        "success_dimensions": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": ["dimension_id", "name"],
+                "properties": {
+                    "dimension_id": {"type": "string"},
+                    "name": {"type": "string"},
+                    "description": {"type": "string"},
+                    "success_definition": {"type": "string"},
+                    "failure_definition": {"type": "string"},
+                },
+            },
+        },
+        "policies": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": ["policy_id", "name", "description"],
+                "properties": {
+                    "policy_id": {"type": "string"},
+                    "name": {"type": "string"},
+                    "description": {"type": "string"},
+                    "applies_to_dimensions": {"type": "array", "items": {"type": "string"}},
+                },
+            },
+        },
+    },
+}
+
 SCHEMAS = {
+    "agent_manifest": AGENT_MANIFEST_SCHEMA,
     "change_proposal": CHANGE_PROPOSAL_SCHEMA,
+    "domain_context": DOMAIN_CONTEXT_SCHEMA,
     "improvement_surface": IMPROVEMENT_SURFACE_SCHEMA,
     "outcome_events": OUTCOME_EVENTS_SCHEMA,
     "replay_bundle": REPLAY_BUNDLE_SCHEMA,
@@ -134,7 +208,9 @@ SCHEMAS = {
 def load_public_schemas() -> dict[str, dict]:
     schema_dir = Path(__file__).resolve().parents[2] / "schemas"
     schema_files = {
+        "agent_manifest": "agent_manifest.schema.json",
         "change_proposal": "change_proposal.schema.json",
+        "domain_context": "domain_context.schema.json",
         "improvement_surface": "improvement_surface.schema.json",
         "outcome_events": "outcome_events.schema.json",
         "replay_bundle": "replay_bundle.schema.json",

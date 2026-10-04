@@ -9,8 +9,9 @@ Agent Change Proposals is currently validating one question:
 
 The project has a working local CLI, public schemas, checked-in examples, and
 file-based import paths for OpenInference/Phoenix-style spans and Langfuse
-observation exports. It also has semantic bundle checks, import diagnostics,
-and proposal coverage reports so early users can see where evidence is missing.
+observation exports. It also has optional declared-intent contracts, semantic
+bundle checks, import diagnostics, and proposal coverage reports so early users
+can see where evidence is missing.
 
 The next important milestone is feedback from people who run agent evals,
 observability pipelines, or internal agent platforms.
@@ -29,13 +30,19 @@ observability pipelines, or internal agent platforms.
    - Issue: https://github.com/vittorfp/agent-change-proposals/issues/3
    - Draft RFC: [rfcs/0001-change-proposal.md](rfcs/0001-change-proposal.md)
 
-3. **Improve ecosystem import fidelity**
+3. **Validate optional declared-intent contracts**
+   - Keep `agent_manifest` and `domain_context` optional.
+   - Use them only to enrich proposal evidence and validation criteria.
+   - Do not let them replace `improvement_surface` as the trust boundary.
+   - Draft RFC: [rfcs/0002-agent-manifest-domain-context.md](rfcs/0002-agent-manifest-domain-context.md)
+
+4. **Improve ecosystem import fidelity**
    - Keep imports file-based for now.
    - Prefer small, documented fixtures over live API dependencies.
    - Use diagnostics to make skipped records and coverage gaps visible.
    - Add fields only when they improve proposal quality.
 
-4. **Make replay more reviewable**
+5. **Make replay more reviewable**
    - Keep controlled replay honest about its limits.
    - Improve reports so they are easy to use in PR/CI review.
 

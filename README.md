@@ -116,6 +116,19 @@ proposals match the committed `change_proposal.example.json` files.
 `acp schema export` makes schemas available even when ACP is installed outside
 of a source checkout.
 
+Optional declared-intent contracts can enrich proposals without widening what
+ACP may change:
+
+```bash
+acp proposal from-trace \
+  examples/declared-intent/traces.json \
+  --outcomes examples/declared-intent/outcomes.json \
+  --surface examples/declared-intent/improvement_surface.json \
+  --agent-manifest examples/declared-intent/agent_manifest.json \
+  --domain-context examples/declared-intent/domain_context.json \
+  --output /tmp/declared_change_proposal.json
+```
+
 For the full walkthrough, read [docs/first-proposal.md](docs/first-proposal.md).
 For positioning, read [docs/not-an-observability-platform.md](docs/not-an-observability-platform.md).
 For feedback, join [the public discussion](https://github.com/vittorfp/agent-change-proposals/discussions/6),
@@ -124,6 +137,10 @@ open a workflow/schema issue using the GitHub issue templates, or read
 
 ## Core Artifacts
 
+- `agent_manifest.json`: optional declared facts about the agent and its
+  observable components.
+- `domain_context.json`: optional declared domain intent, success dimensions,
+  and policies.
 - `outcome_event.json`: an append-only signal about a run result.
 - `improvement_surface.yaml`: the safe knobs this project is allowed to propose
   changing.
@@ -133,10 +150,12 @@ open a workflow/schema issue using the GitHub issue templates, or read
 
 The public schema files live in [schemas/](schemas/).
 The draft schema rationale lives in [RFC 0001](rfcs/0001-change-proposal.md).
+The optional manifest/context boundary is described in [RFC 0002](rfcs/0002-agent-manifest-domain-context.md).
 
 ## Examples
 
 - [RAG missed retrieval](examples/rag-missed-retrieval)
+- [Declared intent](examples/declared-intent)
 - [Tool misuse](examples/tool-misuse)
 - [Missing escalation](examples/missing-escalation)
 - [OpenInference/Phoenix-style import](examples/openinference-phoenix)

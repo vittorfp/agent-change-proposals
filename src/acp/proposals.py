@@ -25,9 +25,18 @@ def build_proposal(
     trace_export: dict[str, Any],
     outcomes: list[dict[str, Any]],
     surface: dict[str, Any],
+    agent_manifest: dict[str, Any] | None = None,
+    domain_context: dict[str, Any] | None = None,
     created_at: str | None = None,
 ) -> dict[str, Any]:
-    proposal, _coverage = build_proposal_with_coverage(trace_export, outcomes, surface, created_at=created_at)
+    proposal, _coverage = build_proposal_with_coverage(
+        trace_export,
+        outcomes,
+        surface,
+        agent_manifest=agent_manifest,
+        domain_context=domain_context,
+        created_at=created_at,
+    )
     return proposal
 
 
@@ -35,6 +44,8 @@ def build_proposal_with_coverage(
     trace_export: dict[str, Any],
     outcomes: list[dict[str, Any]],
     surface: dict[str, Any],
+    agent_manifest: dict[str, Any] | None = None,
+    domain_context: dict[str, Any] | None = None,
     created_at: str | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     created_at = created_at or datetime.now(timezone.utc).isoformat()
@@ -47,6 +58,7 @@ def build_proposal_with_coverage(
     detector_matches: dict[str, list[dict[str, Any]]] = {"tool_misuse": tool_misuse}
     if tool_misuse:
         proposal = _tool_misuse_proposal(tool_misuse[0], failures[tool_misuse[0]["run_id"]], surface, created_at)
+        _apply_declared_context(proposal, agent_manifest, domain_context)
         return proposal, _coverage_report(trace_export, outcomes, runs_by_id, proposal, detector_matches)
 
     missing_escalation = [
@@ -58,6 +70,7 @@ def build_proposal_with_coverage(
         proposal = _missing_escalation_proposal(
             missing_escalation[0], failures[missing_escalation[0]["run_id"]], surface, created_at
         )
+        _apply_declared_context(proposal, agent_manifest, domain_context)
         return proposal, _coverage_report(trace_export, outcomes, runs_by_id, proposal, detector_matches)
 
     missed_retrieval = [
@@ -69,9 +82,11 @@ def build_proposal_with_coverage(
         proposal = _missed_retrieval_proposal(
             missed_retrieval[0], failures[missed_retrieval[0]["run_id"]], surface, created_at
         )
+        _apply_declared_context(proposal, agent_manifest, domain_context)
         return proposal, _coverage_report(trace_export, outcomes, runs_by_id, proposal, detector_matches)
 
     proposal = _no_pattern_proposal(trace_export, outcomes, surface, created_at)
+    _apply_declared_context(proposal, agent_manifest, domain_context)
     return proposal, _coverage_report(trace_export, outcomes, runs_by_id, proposal, detector_matches)
 
 
@@ -111,6 +126,111 @@ def _coverage_report(
             "target_id": proposal.get("proposed_change", {}).get("target", {}).get("target_id"),
         },
     }
+
+
+def _apply_declared_context(
+    proposal: dict[str, Any],
+    agent_manifest: dict[str, Any] | None,
+    domain_context: dict[str, Any] | None,
+) -> None:
+    if agent_manifest:
+        _apply_agent_manifest(proposal, agent_manifest)
+    if domain_context:
+        _apply_domain_context(proposal, domain_context)
+
+
+def _apply_agent_manifest(proposal: dict[str, Any], agent_manifest: dict[str, Any]) -> None:
+    target = proposal.get("proposed_change", {}).get("target", {})
+    target_component = target.get("component")
+    if not target_component:
+        return
+
+    component = next(
+        (
+            item
+            for item in agent_manifest.get("components", [])
+            if item.get("component_id") == target_component
+        ),
+        None,
+    )
+    if not component:
+        return
+
+    target["declared_component"] = {
+        "component_id": component.get("component_id"),
+        "type": component.get("type"),
+        "description": component.get("description"),
+    }
+    proposal.setdefault("evidence", []).append(
+        {
+            "type": "agent_manifest",
+            "component_id": component.get("component_id"),
+            "component_type": component.get("type"),
+            "declared_role": component.get("description"),
+        }
+    )
+
+
+def _apply_domain_context(proposal: dict[str, Any], domain_context: dict[str, Any]) -> None:
+    dimensions = _proposal_outcome_dimensions(proposal)
+    if not dimensions:
+        return
+
+    success_dimensions = {
+        item.get("dimension_id"): item
+        for item in domain_context.get("success_dimensions", [])
+        if item.get("dimension_id")
+    }
+    matched_dimensions = [
+        success_dimensions[dimension_id]
+        for dimension_id in dimensions
+        if dimension_id in success_dimensions
+    ]
+    matched_policies = [
+        policy
+        for policy in domain_context.get("policies", [])
+        if set(policy.get("applies_to_dimensions", [])) & set(dimensions)
+    ]
+    if not matched_dimensions and not matched_policies:
+        return
+
+    proposal.setdefault("evidence", []).append(
+        {
+            "type": "domain_context",
+            "matched_success_dimensions": [
+                {
+                    "dimension_id": item.get("dimension_id"),
+                    "name": item.get("name"),
+                    "failure_definition": item.get("failure_definition"),
+                }
+                for item in matched_dimensions
+            ],
+            "matched_policies": [
+                {
+                    "policy_id": item.get("policy_id"),
+                    "name": item.get("name"),
+                    "description": item.get("description"),
+                }
+                for item in matched_policies
+            ],
+        }
+    )
+
+    criteria = proposal.setdefault("validation", {}).setdefault("acceptance_criteria", [])
+    for item in matched_dimensions:
+        name = item.get("name") or item.get("dimension_id")
+        criteria.append(f"Candidate satisfies declared success dimension: {name}.")
+
+
+def _proposal_outcome_dimensions(proposal: dict[str, Any]) -> list[str]:
+    dimensions: list[str] = []
+    for evidence in proposal.get("evidence", []):
+        if evidence.get("type") != "outcome_event":
+            continue
+        for dimension in evidence.get("dimensions", []):
+            if dimension not in dimensions:
+                dimensions.append(dimension)
+    return dimensions
 
 
 def _missed_retrieval_proposal(

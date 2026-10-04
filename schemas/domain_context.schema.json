@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-change-proposals.dev/schemas/domain_context.schema.json",
+  "title": "Domain Context",
+  "type": "object",
+  "required": ["schema_version", "domain_ref"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "domain_ref": { "type": "object" },
+    "narrative": { "type": "string" },
+    "success_dimensions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["dimension_id", "name"],
+        "properties": {
+          "dimension_id": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "success_definition": { "type": "string" },
+          "failure_definition": { "type": "string" }
+        }
+      }
+    },
+    "policies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["policy_id", "name", "description"],
+        "properties": {
+          "policy_id": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "applies_to_dimensions": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,111 @@
+{
+  "schema_version": "0.1",
+  "proposal_id": "acp_b07c58cb94c7",
+  "title": "Require retrieval for context-dependent questions",
+  "status": "proposed",
+  "created_at": "2026-10-02T00:00:00+00:00",
+  "agent_ref": {
+    "name": "example-support-rag-agent",
+    "version": "0.1.0"
+  },
+  "problem": {
+    "summary": "A failed run appears to require external context, but no retrieval step was observed.",
+    "run_id": "run_declared_001",
+    "outcome_label": "failure",
+    "outcome_source": "human_review"
+  },
+  "evidence": [
+    {
+      "type": "outcome_event",
+      "run_id": "run_declared_001",
+      "label": "failure",
+      "confidence": 0.95,
+      "dimensions": [
+        "groundedness",
+        "policy_compliance"
+      ]
+    },
+    {
+      "type": "trace_pattern",
+      "run_id": "run_declared_001",
+      "observed": "No retrieval span found for a context-dependent input.",
+      "span_count": 1
+    },
+    {
+      "type": "agent_manifest",
+      "component_id": "main_retriever",
+      "component_type": "retriever",
+      "declared_role": "Retrieves current refund-policy passages before policy-sensitive answers."
+    },
+    {
+      "type": "domain_context",
+      "matched_success_dimensions": [
+        {
+          "dimension_id": "groundedness",
+          "name": "Groundedness",
+          "failure_definition": "The final answer makes a policy claim without retrieved policy context."
+        },
+        {
+          "dimension_id": "policy_compliance",
+          "name": "Policy Compliance",
+          "failure_definition": "The answer recommends an unsupported refund or credit."
+        }
+      ],
+      "matched_policies": [
+        {
+          "policy_id": "refund_policy_grounding",
+          "name": "Refund Policy Grounding",
+          "description": "Refund-policy answers require retrieval before final response generation."
+        }
+      ]
+    }
+  ],
+  "hypothesis": {
+    "summary": "The routing or retrieval policy is not requiring retrieval when the user asks for policy, historical, or source-grounded information.",
+    "confidence": "medium",
+    "limits": "This is a hypothesis from trace structure and outcome labels, not a causal proof."
+  },
+  "proposed_change": {
+    "target": {
+      "target_id": "retrieval_policy.main",
+      "type": "retrieval_policy",
+      "component": "main_retriever",
+      "description": "Rules that decide when external knowledge retrieval is required.",
+      "declared_component": {
+        "component_id": "main_retriever",
+        "type": "retriever",
+        "description": "Retrieves current refund-policy passages before policy-sensitive answers."
+      }
+    },
+    "summary": "Update the target so context-dependent questions trigger retrieval before final response generation.",
+    "suggested_patch": {
+      "require_retrieval_when_input_mentions": [
+        "according",
+        "context",
+        "decision",
+        "document",
+        "evidence",
+        "history",
+        "policy",
+        "refund",
+        "source"
+      ]
+    }
+  },
+  "validation": {
+    "method": "controlled_replay",
+    "acceptance_criteria": [
+      "Candidate run includes at least one retrieval span for this case.",
+      "Groundedness or correctness outcome improves without increasing blocked or escalated runs.",
+      "Candidate satisfies declared success dimension: Groundedness.",
+      "Candidate satisfies declared success dimension: Policy Compliance."
+    ]
+  },
+  "risk": {
+    "level": "low",
+    "notes": "May increase latency and retrieval cost for borderline context-dependent questions."
+  },
+  "rollback": {
+    "plan": "Revert the routing or retrieval-policy change if replay or online evaluation regresses."
+  }
+}

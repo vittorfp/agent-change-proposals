@@ -10,7 +10,7 @@ from acp.cli import main
 from acp.examples import verify_examples
 from acp.importers import langfuse_observations_to_trace_export, openinference_to_trace_export
 from acp.proposals import build_proposal
-from acp.schemas import CHANGE_PROPOSAL_SCHEMA
+from acp.schemas import CHANGE_PROPOSAL_SCHEMA, SCHEMAS
 
 EXAMPLES = [
     ("rag-missed-retrieval", "Require retrieval for context-dependent questions"),
@@ -101,6 +101,7 @@ def test_verify_examples_reports_all_examples() -> None:
     reports = verify_examples(Path(__file__).resolve().parents[1] / "examples")
 
     assert {report["example"] for report in reports} == {
+        "declared-intent",
         "langfuse-export",
         "missing-escalation",
         "openinference-phoenix",
@@ -112,7 +113,9 @@ def test_verify_examples_reports_all_examples() -> None:
 def test_schema_list_command(capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["schema", "list"]) == 0
     output = capsys.readouterr().out
+    assert "agent_manifest" in output
     assert "change_proposal" in output
+    assert "domain_context" in output
     assert "trace_export" in output
 
 
@@ -123,6 +126,17 @@ def test_schema_export_command(tmp_path: Path) -> None:
 
     schema = json.loads(output.read_text(encoding="utf-8"))
     assert schema["title"] == "Agent Change Proposal"
+
+
+def test_declared_intent_contracts_are_valid() -> None:
+    root = Path(__file__).resolve().parents[1]
+    example = root / "examples/declared-intent"
+
+    agent_manifest = json.loads((example / "agent_manifest.json").read_text(encoding="utf-8"))
+    domain_context = json.loads((example / "domain_context.json").read_text(encoding="utf-8"))
+
+    validate(instance=agent_manifest, schema=SCHEMAS["agent_manifest"])
+    validate(instance=domain_context, schema=SCHEMAS["domain_context"])
 
 
 def test_bundle_check_accepts_example(capsys: pytest.CaptureFixture[str]) -> None:
@@ -253,6 +267,41 @@ def test_proposal_from_trace_can_write_coverage_report(tmp_path: Path) -> None:
     assert coverage["selected_proposal"]["target_id"] == "retrieval_policy.main"
 
 
+def test_proposal_from_trace_uses_declared_intent(tmp_path: Path) -> None:
+    root = Path(__file__).resolve().parents[1]
+    example = root / "examples/declared-intent"
+    proposal_output = tmp_path / "proposal.json"
+
+    result = main(
+        [
+            "proposal",
+            "from-trace",
+            str(example / "traces.json"),
+            "--outcomes",
+            str(example / "outcomes.json"),
+            "--surface",
+            str(example / "improvement_surface.json"),
+            "--agent-manifest",
+            str(example / "agent_manifest.json"),
+            "--domain-context",
+            str(example / "domain_context.json"),
+            "--output",
+            str(proposal_output),
+            "--created-at",
+            "2026-10-02T00:00:00+00:00",
+        ]
+    )
+
+    assert result == 0
+    proposal = json.loads(proposal_output.read_text(encoding="utf-8"))
+    evidence_types = {item["type"] for item in proposal["evidence"]}
+    assert {"agent_manifest", "domain_context"}.issubset(evidence_types)
+    assert proposal["proposed_change"]["target"]["declared_component"]["component_id"] == "main_retriever"
+    assert "Candidate satisfies declared success dimension: Groundedness." in proposal["validation"][
+        "acceptance_criteria"
+    ]
+
+
 def test_bundle_check_can_include_proposal_coverage_file(
     capsys: pytest.CaptureFixture[str], tmp_path: Path
 ) -> None:
@@ -372,6 +421,7 @@ def test_examples_generate_expected_proposals(tmp_path: Path, example_name: str,
     ("example_name", "expected_title"),
     EXAMPLES
     + [
+        ("declared-intent", "Require retrieval for context-dependent questions"),
         ("openinference-phoenix", "Require retrieval for context-dependent questions"),
         ("langfuse-export", "Review tool-selection policy for failed tool use"),
     ],

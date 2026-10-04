@@ -35,6 +35,8 @@ def main(argv: list[str] | None = None) -> int:
     check_parser.add_argument("--baseline")
     check_parser.add_argument("--candidate")
     check_parser.add_argument("--proposal")
+    check_parser.add_argument("--agent-manifest")
+    check_parser.add_argument("--domain-context")
     check_parser.add_argument("--import-diagnostics")
     check_parser.add_argument("--proposal-coverage")
     check_parser.add_argument("--output")
@@ -45,6 +47,8 @@ def main(argv: list[str] | None = None) -> int:
     from_trace_parser.add_argument("trace")
     from_trace_parser.add_argument("--outcomes", required=True)
     from_trace_parser.add_argument("--surface", required=True)
+    from_trace_parser.add_argument("--agent-manifest")
+    from_trace_parser.add_argument("--domain-context")
     from_trace_parser.add_argument("--output", required=True)
     from_trace_parser.add_argument("--coverage-output")
     from_trace_parser.add_argument("--created-at")
@@ -92,6 +96,8 @@ def main(argv: list[str] | None = None) -> int:
                 baseline_path=args.baseline,
                 candidate_path=args.candidate,
                 proposal_path=args.proposal,
+                agent_manifest_path=args.agent_manifest,
+                domain_context_path=args.domain_context,
                 import_diagnostics_path=args.import_diagnostics,
                 proposal_coverage_path=args.proposal_coverage,
                 output_path=args.output,
@@ -102,6 +108,8 @@ def main(argv: list[str] | None = None) -> int:
                 args.outcomes,
                 args.surface,
                 args.output,
+                agent_manifest_path=args.agent_manifest,
+                domain_context_path=args.domain_context,
                 coverage_output_path=args.coverage_output,
                 created_at=args.created_at,
             )
@@ -139,6 +147,8 @@ def _bundle_check(
     baseline_path: str | None = None,
     candidate_path: str | None = None,
     proposal_path: str | None = None,
+    agent_manifest_path: str | None = None,
+    domain_context_path: str | None = None,
     import_diagnostics_path: str | None = None,
     proposal_coverage_path: str | None = None,
     output_path: str | None = None,
@@ -149,6 +159,8 @@ def _bundle_check(
     baseline = load_data(baseline_path) if baseline_path else None
     candidate = load_data(candidate_path) if candidate_path else None
     proposal = load_data(proposal_path) if proposal_path else None
+    agent_manifest = load_data(agent_manifest_path) if agent_manifest_path else None
+    domain_context = load_data(domain_context_path) if domain_context_path else None
     import_diagnostics = load_data(import_diagnostics_path) if import_diagnostics_path else None
     proposal_coverage = load_data(proposal_coverage_path) if proposal_coverage_path else None
 
@@ -161,6 +173,10 @@ def _bundle_check(
         validate(instance=candidate, schema=SCHEMAS["replay_bundle"])
     if proposal is not None:
         validate(instance=proposal, schema=SCHEMAS["change_proposal"])
+    if agent_manifest is not None:
+        validate(instance=agent_manifest, schema=SCHEMAS["agent_manifest"])
+    if domain_context is not None:
+        validate(instance=domain_context, schema=SCHEMAS["domain_context"])
 
     report = check_bundle(
         trace_export,
@@ -169,6 +185,8 @@ def _bundle_check(
         baseline=baseline,
         candidate=candidate,
         proposal=proposal,
+        agent_manifest=agent_manifest,
+        domain_context=domain_context,
         import_diagnostics=import_diagnostics,
         proposal_coverage=proposal_coverage,
     )
@@ -181,18 +199,33 @@ def _proposal_from_trace(
     outcomes_path: str,
     surface_path: str,
     output_path: str,
+    agent_manifest_path: str | None = None,
+    domain_context_path: str | None = None,
     coverage_output_path: str | None = None,
     created_at: str | None = None,
 ) -> int:
     trace_export = load_data(trace_path)
     outcomes = load_data(outcomes_path)
     surface = load_data(surface_path)
+    agent_manifest = load_data(agent_manifest_path) if agent_manifest_path else None
+    domain_context = load_data(domain_context_path) if domain_context_path else None
 
     validate(instance=trace_export, schema=SCHEMAS["trace_export"])
     validate(instance=outcomes, schema=SCHEMAS["outcome_events"])
     validate(instance=surface, schema=SCHEMAS["improvement_surface"])
+    if agent_manifest is not None:
+        validate(instance=agent_manifest, schema=SCHEMAS["agent_manifest"])
+    if domain_context is not None:
+        validate(instance=domain_context, schema=SCHEMAS["domain_context"])
 
-    proposal, coverage = build_proposal_with_coverage(trace_export, outcomes, surface, created_at=created_at)
+    proposal, coverage = build_proposal_with_coverage(
+        trace_export,
+        outcomes,
+        surface,
+        agent_manifest=agent_manifest,
+        domain_context=domain_context,
+        created_at=created_at,
+    )
     validate(instance=proposal, schema=SCHEMAS["change_proposal"])
     dump_data(Path(output_path), proposal)
     if coverage_output_path:

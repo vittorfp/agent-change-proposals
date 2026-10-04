@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-change-proposals.dev/schemas/agent_manifest.schema.json",
+  "title": "Agent Manifest",
+  "type": "object",
+  "required": ["schema_version", "agent_ref"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "agent_ref": { "type": "object" },
+    "description": { "type": "string" },
+    "components": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["component_id", "type"],
+        "properties": {
+          "component_id": { "type": "string" },
+          "type": {
+            "enum": [
+              "llm",
+              "router",
+              "retriever",
+              "tool",
+              "memory",
+              "guardrail",
+              "prompt",
+              "config"
+            ]
+          },
+          "description": { "type": "string" },
+          "depends_on": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "limits": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

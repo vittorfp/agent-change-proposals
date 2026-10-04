@@ -1,0 +1,32 @@
+{
+  "schema_version": "0.1",
+  "domain_ref": {
+    "name": "refund-support",
+    "version": "0.1.0"
+  },
+  "narrative": "Refund answers must be grounded in the current refund policy because incorrect credits affect customers and support cost.",
+  "success_dimensions": [
+    {
+      "dimension_id": "groundedness",
+      "name": "Groundedness",
+      "description": "Answers should be supported by retrieved policy context.",
+      "success_definition": "The final answer cites or uses current policy context.",
+      "failure_definition": "The final answer makes a policy claim without retrieved policy context."
+    },
+    {
+      "dimension_id": "policy_compliance",
+      "name": "Policy Compliance",
+      "description": "Answers should follow the declared refund policy.",
+      "success_definition": "The answer matches the refund policy for the cancellation scenario.",
+      "failure_definition": "The answer recommends an unsupported refund or credit."
+    }
+  ],
+  "policies": [
+    {
+      "policy_id": "refund_policy_grounding",
+      "name": "Refund Policy Grounding",
+      "description": "Refund-policy answers require retrieval before final response generation.",
+      "applies_to_dimensions": ["groundedness", "policy_compliance"]
+    }
+  ]
+}

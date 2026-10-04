@@ -1,0 +1,23 @@
+{
+  "schema_version": "0.1",
+  "agent_ref": {
+    "name": "example-support-rag-agent",
+    "version": "0.1.0"
+  },
+  "description": "A support assistant that answers refund-policy questions with retrieved policy context.",
+  "components": [
+    {
+      "component_id": "main_retriever",
+      "type": "retriever",
+      "description": "Retrieves current refund-policy passages before policy-sensitive answers."
+    },
+    {
+      "component_id": "final_answer",
+      "type": "llm",
+      "description": "Writes the final customer-facing answer after retrieval or escalation."
+    }
+  ],
+  "limits": [
+    "Do not answer refund-policy questions without policy context."
+  ]
+}

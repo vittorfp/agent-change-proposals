@@ -30,13 +30,26 @@ def _verify_example(example_dir: Path) -> dict[str, Any]:
     outcomes = load_data(example_dir / "outcomes.json")
     surface = load_data(example_dir / "improvement_surface.json")
     checked_in_proposal = load_data(example_dir / "change_proposal.example.json")
+    agent_manifest = _load_optional(example_dir / "agent_manifest.json")
+    domain_context = _load_optional(example_dir / "domain_context.json")
 
     validate(instance=trace_export, schema=SCHEMAS["trace_export"])
     validate(instance=outcomes, schema=SCHEMAS["outcome_events"])
     validate(instance=surface, schema=SCHEMAS["improvement_surface"])
+    if agent_manifest is not None:
+        validate(instance=agent_manifest, schema=SCHEMAS["agent_manifest"])
+    if domain_context is not None:
+        validate(instance=domain_context, schema=SCHEMAS["domain_context"])
     validate(instance=checked_in_proposal, schema=SCHEMAS["change_proposal"])
 
-    generated_proposal = build_proposal(trace_export, outcomes, surface, created_at=FIXED_EXAMPLE_CREATED_AT)
+    generated_proposal = build_proposal(
+        trace_export,
+        outcomes,
+        surface,
+        agent_manifest=agent_manifest,
+        domain_context=domain_context,
+        created_at=FIXED_EXAMPLE_CREATED_AT,
+    )
     validate(instance=generated_proposal, schema=SCHEMAS["change_proposal"])
     if generated_proposal != checked_in_proposal:
         raise ValueError(f"checked-in proposal is stale for example: {example_dir.name}")
@@ -77,3 +90,9 @@ def _load_trace_export(example_dir: Path) -> dict[str, Any]:
         return langfuse_observations_to_trace_export(load_data(langfuse_path))
 
     raise FileNotFoundError(f"no supported trace fixture found for example: {example_dir.name}")
+
+
+def _load_optional(path: Path) -> dict[str, Any] | None:
+    if not path.exists():
+        return None
+    return load_data(path)

@@ -11,9 +11,13 @@ REQUIRED_SDIST_PATHS = [
     "ROADMAP.md",
     "SECURITY.md",
     "docs/feedback-playbook.md",
+    "examples/declared-intent/agent_manifest.json",
     "examples/rag-missed-retrieval/change_proposal.example.json",
     "rfcs/0001-change-proposal.md",
+    "rfcs/0002-agent-manifest-domain-context.md",
+    "schemas/agent_manifest.schema.json",
     "schemas/change_proposal.schema.json",
+    "schemas/domain_context.schema.json",
 ]
 
 
