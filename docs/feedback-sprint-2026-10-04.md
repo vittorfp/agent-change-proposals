@@ -18,6 +18,21 @@ help decide where to ask and what questions to ask.
 
 Direct feedback collected so far: none.
 
+## Outreach Posted
+
+| Date | Channel | URL | Status |
+| --- | --- | --- | --- |
+| 2026-10-04 | Langfuse GitHub Discussions / Share your Work | <https://github.com/orgs/langfuse/discussions/18200> | Waiting for replies |
+| 2026-10-04 | Phoenix GitHub Discussions / Show and tell | <https://github.com/Arize-ai/phoenix/discussions/16767> | Waiting for replies |
+
+Not posted yet:
+
+- LangChain Forum, because GitHub Discussions for `langchain-ai/langchain` now
+  points users to <https://forum.langchain.com/> and posting there requires a
+  normal forum login.
+- Reddit, Discord, and Slack, because posting there requires an authenticated
+  user session and should be done transparently, without anti-detect tooling.
+
 ## Ambient Signals
 
 | Source | What It Suggests | ACP Implication |

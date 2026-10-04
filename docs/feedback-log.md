@@ -10,6 +10,13 @@ messages. Link back to public sources when possible.
 - Strongest adoption blocker: _none yet_
 - Schema changes justified by repeated feedback: _none yet_
 
+## Outreach
+
+| Date | Channel | URL | Status |
+| --- | --- | --- | --- |
+| 2026-10-04 | Langfuse GitHub Discussions | <https://github.com/orgs/langfuse/discussions/18200> | Waiting for replies |
+| 2026-10-04 | Phoenix GitHub Discussions | <https://github.com/Arize-ai/phoenix/discussions/16767> | Waiting for replies |
+
 ## Ambient Signals
 
 Ambient signals are public workflow pains that look relevant to ACP but are not
