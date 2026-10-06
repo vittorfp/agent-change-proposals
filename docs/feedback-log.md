@@ -16,6 +16,7 @@ messages. Link back to public sources when possible.
 | --- | --- | --- | --- |
 | 2026-10-04 | Langfuse GitHub Discussions | <https://github.com/orgs/langfuse/discussions/18200> | Waiting for replies |
 | 2026-10-04 | Phoenix GitHub Discussions | <https://github.com/Arize-ai/phoenix/discussions/16767> | Waiting for replies |
+| 2026-10-06 | Reddit r/AI_Agents | <https://www.reddit.com/r/AI_Agents/comments/1wz9ei5/how_do_you_review_proposed_agent_behavior_changes/> | Waiting for replies |
 
 ## Ambient Signals
 
