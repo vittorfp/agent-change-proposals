@@ -54,6 +54,26 @@ Required top-level fields:
 - `risk`
 - `rollback`
 
+The first external feedback after v0.5.0 pointed to a clear schema gap: the
+artifact shape is useful for eval review and incident follow-up, but it needs
+stronger machine-readable fields before it should be trusted as a CI gate. ACP
+should invest in that direction, but the next step should be a designed schema
+surface rather than adding every requested field as a new top-level required
+property.
+
+For the next schema iteration, prioritize plain JSON fields that make review
+and CI gating less ambiguous:
+
+- immutable evidence references;
+- baseline and candidate artifact IDs;
+- evaluator and dataset versions;
+- metric threshold and comparison operator;
+- sample count and evaluation scope;
+- explicit rollback trigger.
+
+Open question: should these live under `validation`, as typed `evidence`
+items, or in a dedicated `gate`/`decision` object?
+
 ## Field Intent
 
 ### `problem`
@@ -133,4 +153,3 @@ The most useful feedback is concrete:
 - Which fields are too vague to trust?
 - What should be stricter now, and what should stay flexible until more real
   examples exist?
-
