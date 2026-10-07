@@ -19,17 +19,97 @@ CHANGE_PROPOSAL_SCHEMA = {
         "rollback",
     ],
     "properties": {
-        "schema_version": {"type": "string"},
-        "proposal_id": {"type": "string"},
-        "title": {"type": "string"},
+        "schema_version": {"type": "string", "minLength": 1},
+        "proposal_id": {"type": "string", "minLength": 1},
+        "title": {"type": "string", "minLength": 1},
         "status": {"enum": ["proposed", "accepted", "rejected", "tested"]},
-        "problem": {"type": "object"},
-        "evidence": {"type": "array", "items": {"type": "object"}},
-        "hypothesis": {"type": "object"},
-        "proposed_change": {"type": "object"},
-        "validation": {"type": "object"},
-        "risk": {"type": "object"},
-        "rollback": {"type": "object"},
+        "problem": {
+            "type": "object",
+            "required": ["summary"],
+            "properties": {
+                "summary": {"type": "string", "minLength": 1},
+                "run_id": {"type": "string", "minLength": 1},
+                "outcome_label": {"type": "string", "minLength": 1},
+                "outcome_source": {"type": "string", "minLength": 1},
+            },
+        },
+        "evidence": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+                "type": "object",
+                "required": ["type"],
+                "properties": {
+                    "type": {"type": "string", "minLength": 1},
+                    "run_id": {"type": "string", "minLength": 1},
+                    "label": {"type": "string", "minLength": 1},
+                    "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+                    "dimensions": {"type": "array", "items": {"type": "string"}},
+                    "observed": {"type": "string", "minLength": 1},
+                    "span_count": {"type": "integer", "minimum": 0},
+                    "span": {"type": "object"},
+                    "component_id": {"type": "string", "minLength": 1},
+                    "component_type": {"type": "string", "minLength": 1},
+                    "declared_role": {"type": "string", "minLength": 1},
+                    "matched_success_dimensions": {"type": "array"},
+                    "matched_policies": {"type": "array"},
+                },
+            },
+        },
+        "hypothesis": {
+            "type": "object",
+            "required": ["summary", "confidence"],
+            "properties": {
+                "summary": {"type": "string", "minLength": 1},
+                "confidence": {"type": "string", "minLength": 1},
+                "limits": {"type": "string"},
+            },
+        },
+        "proposed_change": {
+            "type": "object",
+            "required": ["target", "summary"],
+            "properties": {
+                "target": {
+                    "type": "object",
+                    "required": ["target_id", "type", "component"],
+                    "properties": {
+                        "target_id": {"type": "string", "minLength": 1},
+                        "type": {"type": "string", "minLength": 1},
+                        "component": {"type": "string", "minLength": 1},
+                        "description": {"type": "string"},
+                    },
+                },
+                "summary": {"type": "string", "minLength": 1},
+                "suggested_patch": {"type": "object"},
+            },
+        },
+        "validation": {
+            "type": "object",
+            "required": ["method", "acceptance_criteria"],
+            "properties": {
+                "method": {"type": "string", "minLength": 1},
+                "acceptance_criteria": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {"type": "string", "minLength": 1},
+                },
+            },
+        },
+        "risk": {
+            "type": "object",
+            "required": ["level", "notes"],
+            "properties": {
+                "level": {"enum": ["low", "medium", "high"]},
+                "notes": {"type": "string", "minLength": 1},
+            },
+        },
+        "rollback": {
+            "type": "object",
+            "required": ["plan"],
+            "properties": {
+                "plan": {"type": "string", "minLength": 1},
+            },
+        },
     },
 }
 

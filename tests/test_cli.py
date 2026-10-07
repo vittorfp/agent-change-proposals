@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 import pytest
-from jsonschema import validate
+from jsonschema import ValidationError, validate
 
 from acp.cli import main
 from acp.examples import verify_examples
@@ -126,6 +126,25 @@ def test_schema_export_command(tmp_path: Path) -> None:
 
     schema = json.loads(output.read_text(encoding="utf-8"))
     assert schema["title"] == "Agent Change Proposal"
+
+
+def test_change_proposal_schema_rejects_underspecified_nested_sections() -> None:
+    sparse_proposal = {
+        "schema_version": "0.1",
+        "proposal_id": "acp_sparse",
+        "title": "Sparse proposal",
+        "status": "proposed",
+        "problem": {},
+        "evidence": [{}],
+        "hypothesis": {},
+        "proposed_change": {},
+        "validation": {},
+        "risk": {},
+        "rollback": {},
+    }
+
+    with pytest.raises(ValidationError):
+        validate(instance=sparse_proposal, schema=CHANGE_PROPOSAL_SCHEMA)
 
 
 def test_declared_intent_contracts_are_valid() -> None:

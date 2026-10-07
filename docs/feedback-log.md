@@ -5,9 +5,9 @@ messages. Link back to public sources when possible.
 
 ## Summary
 
-- Feedback items collected: 0
-- Strongest positive signal: _none yet_
-- Strongest adoption blocker: _none yet_
+- Feedback items collected: 1
+- Strongest positive signal: useful for eval review and incident follow-up.
+- Strongest adoption blocker: current schema is too permissive for CI gating.
 - Schema changes justified by repeated feedback: _none yet_
 
 ## Outreach
@@ -37,7 +37,7 @@ direct feedback on the project.
 
 | Date | Source | Reviewer Context | Category | Signal | Action |
 | --- | --- | --- | --- | --- | --- |
-| _TBD_ | _TBD_ | _TBD_ | _TBD_ | _TBD_ | _TBD_ |
+| 2026-10-06 | [GitHub discussion #6](https://github.com/vittorfp/agent-change-proposals/discussions/6#discussioncomment-18783719) | Public reviewer of v0.5 proposal format | schema-gap, trust-gap | Useful for eval review and incident follow-up, but not ready as a CI gate because nested proposal sections can be underspecified while still validating. Reviewer asked for machine-readable validation, immutable evidence refs, baseline/candidate artifact IDs, evaluator and dataset versions, metric threshold, sample count, rollback trigger, and plain JSON stabilization before more integrations. | Tighten V0 schema around existing nested sections first; track CI-readiness fields in issue #3 before adding new required fields. |
 
 ## Open Questions
 
