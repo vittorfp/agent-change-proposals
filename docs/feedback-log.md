@@ -22,6 +22,7 @@ messages. Link back to public sources when possible.
 | 2026-10-07 | DeepEval GitHub Discussions | <https://github.com/confident-ai/deepeval/discussions/3427> | Waiting for replies |
 | 2026-10-07 | Helicone GitHub Discussions | <https://github.com/Helicone/helicone/discussions/5833> | Waiting for replies |
 | 2026-10-07 | OpenLLMetry GitHub Discussions | <https://github.com/traceloop/openllmetry/discussions/4579> | Waiting for replies |
+| 2026-10-07 | LangChain Forum / Observability & Evals | <https://forum.langchain.com/c/help/langsmith/8> | Submitted; pending moderator approval |
 
 ## Ambient Signals
 

@@ -30,13 +30,10 @@ Direct feedback collected so far: 1.
 | 2026-10-07 | DeepEval GitHub Discussions / Show and tell | <https://github.com/confident-ai/deepeval/discussions/3427> | Waiting for replies |
 | 2026-10-07 | Helicone GitHub Discussions / Show and tell | <https://github.com/Helicone/helicone/discussions/5833> | Waiting for replies |
 | 2026-10-07 | OpenLLMetry GitHub Discussions / Show and tell | <https://github.com/traceloop/openllmetry/discussions/4579> | Waiting for replies |
+| 2026-10-07 | LangChain Forum / Observability & Evals | <https://forum.langchain.com/c/help/langsmith/8> | Submitted; pending moderator approval |
 
 Not posted yet:
 
-- LangChain Forum, because GitHub Discussions for `langchain-ai/langchain` now
-  points users to <https://forum.langchain.com/> and posting there requires a
-  normal forum login. Browser automation was unavailable in the 2026-10-07
-  follow-up session, so this remains a manual/authenticated target.
 - Discord and Slack, because posting there requires an authenticated user
   session and should be done transparently, without anti-detect tooling.
 
