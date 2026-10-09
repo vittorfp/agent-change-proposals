@@ -164,6 +164,25 @@ criteria, only some of which are CI-checkable. Before implementing v0.6, compare
 `validation.gate.metrics[*]` with `validation.checks[*]` and decide whether
 `gate` should become a wrapper around checks or disappear entirely.
 
+If ACP adopts `validation.checks`, it should decide whether each check points to
+one criterion or many. A strict 1:1 shape is simple, but a single machine check
+can support several criteria. For example, a row-count-preservation check might
+support both "no dropped cases" and "candidate/baseline comparison stayed
+well-formed." A possible shape is:
+
+```json
+{
+  "criteria": [0, 2],
+  "suite": "replay_integrity",
+  "metric": "row_count_delta",
+  "op": "==",
+  "value": 0
+}
+```
+
+That flexibility makes duplicate checks less likely, but makes failure
+reporting slightly less direct than a single `criterion` field.
+
 The same feedback also raised approval integrity: `status: accepted` is not
 enough if the proposal can be edited after review. A future schema should
 consider approval metadata tied to a canonical proposal digest, so edits after
@@ -192,5 +211,6 @@ without making it globally required.
 - Should CI decide on all metrics or only metrics marked `required: true`?
 - Should checks reference acceptance criteria by array index, stable criterion
   ID, or an embedded object?
+- Should one check be allowed to reference multiple acceptance criteria?
 - Should accepted proposals include approval metadata with a canonical proposal
   digest?

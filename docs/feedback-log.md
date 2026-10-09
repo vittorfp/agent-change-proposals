@@ -45,7 +45,7 @@ direct feedback on the project.
 | Date | Source | Reviewer Context | Category | Signal | Action |
 | --- | --- | --- | --- | --- | --- |
 | 2026-10-06 | [GitHub discussion #6](https://github.com/vittorfp/agent-change-proposals/discussions/6#discussioncomment-18783719) | Public reviewer of v0.5 proposal format | schema-gap, trust-gap | Useful for eval review and incident follow-up, but not ready as a CI gate because nested proposal sections can be underspecified while still validating. Reviewer asked for machine-readable validation, immutable evidence refs, baseline/candidate artifact IDs, evaluator and dataset versions, metric threshold, sample count, rollback trigger, and plain JSON stabilization before more integrations. | Tighten V0 schema around existing nested sections first; track CI-readiness fields in issue #3 before adding new required fields. |
-| 2026-10-08 | [GitHub discussion #6](https://github.com/vittorfp/agent-change-proposals/discussions/6#discussioncomment-18815168) | Public reviewer of v0.6 CI-gate direction | schema-gap, trust-gap | Keep gate fields under `validation`, but model them as a list of checks tied to acceptance-criteria indexes instead of flat fields or one evaluation object. This would let CI report which criterion failed while keeping prose criteria readable. Reviewer also warned that `status: accepted` is insufficient unless approval is tied to a canonical proposal digest, so edits after approval become stale. | Add `validation.checks` as a serious RFC 0003 alternative before schema enforcement; track approval digest/version semantics as a schema follow-up. |
+| 2026-10-08 | [GitHub discussion #6](https://github.com/vittorfp/agent-change-proposals/discussions/6#discussioncomment-18815168) and [follow-up](https://github.com/vittorfp/agent-change-proposals/discussions/6#discussioncomment-18837203) | Public reviewer of v0.6 CI-gate direction | schema-gap, trust-gap | Keep gate fields under `validation`, but model them as a list of checks tied to acceptance criteria instead of flat fields or one evaluation object. This would let CI report which criterion failed while keeping prose criteria readable. Reviewer also warned that `status: accepted` is insufficient unless approval is tied to a canonical proposal digest, so edits after approval become stale. Follow-up asks whether one check can reference multiple criteria, since some checks may support several criteria at once. | Add `validation.checks` as a serious RFC 0003 alternative before schema enforcement; track approval digest/version semantics and multi-criterion check references as schema follow-ups. |
 
 ## Open Questions
 
@@ -56,6 +56,7 @@ direct feedback on the project.
 - Should validation criteria become structured objects instead of strings?
 - Should CI checks reference prose acceptance criteria by index, stable ID, or
   embedded criterion object?
+- Can one CI check satisfy multiple acceptance criteria?
 - Should accepted proposals require approval metadata tied to a canonical
   proposal digest?
 - Which importer should become more faithful first: OpenInference/Phoenix or
