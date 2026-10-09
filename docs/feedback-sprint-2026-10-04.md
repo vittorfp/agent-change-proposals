@@ -16,7 +16,7 @@ help decide where to ask and what questions to ask.
 - Best review example:
   [`examples/declared-intent/change_proposal.example.json`](../examples/declared-intent/change_proposal.example.json)
 
-Direct feedback collected so far: 1.
+Direct feedback collected so far: 2.
 
 ## Outreach Posted
 

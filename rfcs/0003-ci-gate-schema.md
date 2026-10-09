@@ -127,6 +127,48 @@ answers "what artifact supports this proposal?" The validation gate answers
 Separating them lets one evidence item support multiple gate rules and lets
 reviewers inspect supporting artifacts without reading CI policy first.
 
+## Alternative: `validation.checks`
+
+A second direct feedback item proposed `validation.checks` instead of one
+`validation.gate` object:
+
+```json
+{
+  "validation": {
+    "method": "controlled_replay",
+    "acceptance_criteria": [
+      "Candidate run includes at least one retrieval span for this case."
+    ],
+    "checks": [
+      {
+        "criterion": 0,
+        "suite": "rag_missed_retrieval",
+        "metric": "retrieval_called",
+        "op": "==",
+        "value": true,
+        "min_cases": 1
+      }
+    ]
+  }
+}
+```
+
+This shape has two advantages over the current `validation.gate` draft:
+
+- each machine check can point at the human-readable criterion it verifies;
+- criteria without checks remain explicitly human-reviewed instead of being
+  hidden inside one aggregate gate.
+
+This may be a better fit if proposals commonly have several acceptance
+criteria, only some of which are CI-checkable. Before implementing v0.6, compare
+`validation.gate.metrics[*]` with `validation.checks[*]` and decide whether
+`gate` should become a wrapper around checks or disappear entirely.
+
+The same feedback also raised approval integrity: `status: accepted` is not
+enough if the proposal can be edited after review. A future schema should
+consider approval metadata tied to a canonical proposal digest, so edits after
+approval invalidate the prior acceptance.
+
 ## Backward Compatibility
 
 For v0.6, these fields should be additive:
@@ -148,3 +190,7 @@ without making it globally required.
 - Should rollback triggers live in both `validation.gate` and `rollback`, or
   should `rollback` reference the gate trigger?
 - Should CI decide on all metrics or only metrics marked `required: true`?
+- Should checks reference acceptance criteria by array index, stable criterion
+  ID, or an embedded object?
+- Should accepted proposals include approval metadata with a canonical proposal
+  digest?
