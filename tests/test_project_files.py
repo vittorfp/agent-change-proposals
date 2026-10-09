@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import json
 import yaml
+from jsonschema import validate
+
+from acp.schemas import SCHEMAS
 
 REQUIRED_ISSUE_TEMPLATES = {
     "feedback.md": {"label": "feedback"},
@@ -57,3 +61,14 @@ def test_trust_files_exist_and_discourage_sensitive_public_data() -> None:
     assert "sensitive" in security
     assert "traces" in security
     assert "prompts" in security
+
+
+def test_ci_gate_rfc_example_matches_current_change_proposal_schema() -> None:
+    root = Path(__file__).resolve().parents[1]
+    path = root / "rfcs" / "examples" / "ci-gate.change_proposal.example.json"
+
+    proposal = json.loads(path.read_text(encoding="utf-8"))
+
+    validate(instance=proposal, schema=SCHEMAS["change_proposal"])
+    assert proposal["validation"]["gate"]["mode"] == "blocking"
+    assert proposal["validation"]["gate"]["required_evidence_refs"]

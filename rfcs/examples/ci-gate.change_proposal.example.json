@@ -1,0 +1,148 @@
+{
+  "schema_version": "0.6-draft",
+  "proposal_id": "acp_ci_gate_retrieval_policy",
+  "title": "Require retrieval for policy-sensitive support questions",
+  "status": "proposed",
+  "created_at": "2026-10-09T00:00:00+00:00",
+  "agent_ref": {
+    "name": "example-support-rag-agent",
+    "version": "0.2.0"
+  },
+  "problem": {
+    "summary": "Policy-sensitive support questions sometimes skip retrieval, causing ungrounded refund guidance.",
+    "run_id": "run_policy_eval_041",
+    "outcome_label": "failure",
+    "outcome_source": "controlled_eval"
+  },
+  "evidence": [
+    {
+      "type": "outcome_event",
+      "evidence_ref": "evidence:outcome:run_policy_eval_041",
+      "immutable_ref": "sha256:2e9d5b8f5a4f4b8b0e5b0e1f9fd20c5e8cf6e4f4e5b6a1b2c3d4e5f60718293a",
+      "run_id": "run_policy_eval_041",
+      "label": "failure",
+      "confidence": 0.96,
+      "dimensions": [
+        "groundedness",
+        "policy_compliance"
+      ]
+    },
+    {
+      "type": "trace_pattern",
+      "evidence_ref": "evidence:trace:no-retrieval-policy-sensitive",
+      "immutable_ref": "sha256:b8f78d73f94d698aa5c6a7f2142bdbb536f0f99188fe8b8d7f1f04254f84f9a7",
+      "run_id": "run_policy_eval_041",
+      "observed": "No retrieval span was present before the agent answered a refund-policy question.",
+      "span_count": 4
+    },
+    {
+      "type": "evaluation_result",
+      "evidence_ref": "evidence:eval:refund-policy-replay:2026-10-09",
+      "immutable_ref": "sha256:97d6ecaf2b6d8f87abfd34d4e60c3e4bbabf7f0cc2bdbbb77b0f476f1e5c060f",
+      "artifact_id": "eval-result-refund-policy-replay-2026-10-09",
+      "baseline_artifact_id": "replay-baseline-refund-policy-2026-10-09",
+      "candidate_artifact_id": "replay-candidate-refund-policy-2026-10-09",
+      "dataset_id": "refund-policy-replay-set",
+      "dataset_version": "2026-10-09",
+      "evaluator_id": "groundedness-and-policy-check",
+      "evaluator_version": "0.3.1",
+      "sample_count": 48,
+      "metric": "groundedness_pass_rate",
+      "baseline_value": 0.71,
+      "candidate_value": 0.94
+    }
+  ],
+  "hypothesis": {
+    "summary": "The retrieval policy does not require retrieval for all policy-sensitive refund questions.",
+    "confidence": "medium",
+    "limits": "The evaluation set is intentionally narrow and should not be treated as full production coverage."
+  },
+  "proposed_change": {
+    "target": {
+      "target_id": "retrieval_policy.main",
+      "type": "retrieval_policy",
+      "component": "main_retriever",
+      "description": "Rules that decide when external knowledge retrieval is required."
+    },
+    "summary": "Require retrieval before final answers for policy-sensitive refund questions.",
+    "suggested_patch": {
+      "require_retrieval_when": [
+        "input mentions refund policy",
+        "input asks for eligibility, credit, cancellation, or exception handling",
+        "answer would make a policy-sensitive recommendation"
+      ]
+    }
+  },
+  "validation": {
+    "method": "controlled_replay",
+    "acceptance_criteria": [
+      "Candidate includes retrieval for policy-sensitive cases.",
+      "Groundedness pass rate is at least 0.92 on the replay set.",
+      "Candidate does not reduce policy-compliance pass rate.",
+      "Candidate does not push retrieval latency p95 above rollback threshold."
+    ],
+    "gate": {
+      "mode": "blocking",
+      "baseline_artifact_id": "replay-baseline-refund-policy-2026-10-09",
+      "candidate_artifact_id": "replay-candidate-refund-policy-2026-10-09",
+      "dataset": {
+        "id": "refund-policy-replay-set",
+        "version": "2026-10-09",
+        "sample_count": 48,
+        "scope": "Policy-sensitive support questions about refunds, cancellations, and credits."
+      },
+      "evaluator": {
+        "id": "groundedness-and-policy-check",
+        "version": "0.3.1"
+      },
+      "metrics": [
+        {
+          "name": "groundedness_pass_rate",
+          "operator": ">=",
+          "threshold": 0.92,
+          "baseline_value": 0.71,
+          "candidate_value": 0.94,
+          "sample_count": 48,
+          "required": true
+        },
+        {
+          "name": "policy_compliance_pass_rate",
+          "operator": ">=",
+          "threshold": 0.9,
+          "baseline_value": 0.83,
+          "candidate_value": 0.92,
+          "sample_count": 48,
+          "required": true
+        },
+        {
+          "name": "retrieval_latency_p95_ms",
+          "operator": "<=",
+          "threshold": 1800,
+          "baseline_value": 940,
+          "candidate_value": 1280,
+          "sample_count": 48,
+          "required": false
+        }
+      ],
+      "required_evidence_refs": [
+        "evidence:outcome:run_policy_eval_041",
+        "evidence:trace:no-retrieval-policy-sensitive",
+        "evidence:eval:refund-policy-replay:2026-10-09"
+      ],
+      "rollback_trigger": {
+        "metric": "retrieval_latency_p95_ms",
+        "operator": ">",
+        "threshold": 1800,
+        "window": "24h"
+      }
+    }
+  },
+  "risk": {
+    "level": "medium",
+    "notes": "The change may increase latency and retrieval cost for refund-related support traffic."
+  },
+  "rollback": {
+    "plan": "Revert the retrieval-policy rule if the gate fails in CI or if the rollback trigger fires in production.",
+    "trigger_ref": "validation.gate.rollback_trigger"
+  }
+}

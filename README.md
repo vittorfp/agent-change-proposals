@@ -151,6 +151,8 @@ open a workflow/schema issue using the GitHub issue templates, or read
 The public schema files live in [schemas/](schemas/).
 The draft schema rationale lives in [RFC 0001](rfcs/0001-change-proposal.md).
 The optional manifest/context boundary is described in [RFC 0002](rfcs/0002-agent-manifest-domain-context.md).
+The proposed CI-gate validation shape is described in
+[RFC 0003](rfcs/0003-ci-gate-schema.md).
 
 ## Examples
 

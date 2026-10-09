@@ -27,8 +27,11 @@ observability pipelines, or internal agent platforms.
 2. **Refine the `change_proposal` schema**
    - Improve field names, required evidence, confidence, risk, and validation
      structure based on feedback.
+   - Draft a v0.6 CI-gate shape around `validation.gate` and immutable
+     evidence refs before making new fields globally required.
    - Issue: https://github.com/vittorfp/agent-change-proposals/issues/3
    - Draft RFC: [rfcs/0001-change-proposal.md](rfcs/0001-change-proposal.md)
+   - CI-gate RFC: [rfcs/0003-ci-gate-schema.md](rfcs/0003-ci-gate-schema.md)
 
 3. **Validate optional declared-intent contracts**
    - Keep `agent_manifest` and `domain_context` optional.
