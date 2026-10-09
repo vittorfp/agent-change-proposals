@@ -16,7 +16,7 @@ help decide where to ask and what questions to ask.
 - Best review example:
   [`examples/declared-intent/change_proposal.example.json`](../examples/declared-intent/change_proposal.example.json)
 
-Direct feedback collected so far: 2.
+Direct feedback collected so far: 4.
 
 ## Outreach Posted
 
@@ -24,9 +24,9 @@ Direct feedback collected so far: 2.
 | --- | --- | --- | --- |
 | 2026-10-04 | Langfuse GitHub Discussions / Share your Work | <https://github.com/orgs/langfuse/discussions/18200> | Waiting for replies |
 | 2026-10-04 | Phoenix GitHub Discussions / Show and tell | <https://github.com/Arize-ai/phoenix/discussions/16767> | Waiting for replies |
-| 2026-10-06 | Reddit r/AI_Agents / Discussion | <https://www.reddit.com/r/AI_Agents/comments/1wz9ei5/how_do_you_review_proposed_agent_behavior_changes/> | Waiting for replies |
-| 2026-10-06 | Reddit r/AutoGPT | <https://www.reddit.com/r/AutoGPT/comments/1wz9iig/how_do_you_review_behavior_changes_for_autonomous/> | Waiting for replies |
-| 2026-10-06 | Reddit r/AIQuality / Question | <https://www.reddit.com/r/AIQuality/comments/1wz9jg7/what_evidence_makes_an_ai_agent_behavior_change/> | Waiting for replies |
+| 2026-10-06 | Reddit r/AI_Agents / Discussion | <https://www.reddit.com/r/AI_Agents/comments/1wz9ei5/how_do_you_review_proposed_agent_behavior_changes/> | 12 comments; feedback summarized |
+| 2026-10-06 | Reddit r/AutoGPT | <https://www.reddit.com/r/AutoGPT/comments/1wz9iig/how_do_you_review_behavior_changes_for_autonomous/> | 1 comment; feedback summarized |
+| 2026-10-06 | Reddit r/AIQuality / Question | <https://www.reddit.com/r/AIQuality/comments/1wz9jg7/what_evidence_makes_an_ai_agent_behavior_change/> | No comments yet |
 | 2026-10-07 | DeepEval GitHub Discussions / Show and tell | <https://github.com/confident-ai/deepeval/discussions/3427> | Waiting for replies |
 | 2026-10-07 | Helicone GitHub Discussions / Show and tell | <https://github.com/Helicone/helicone/discussions/5833> | Waiting for replies |
 | 2026-10-07 | OpenLLMetry GitHub Discussions / Show and tell | <https://github.com/traceloop/openllmetry/discussions/4579> | Waiting for replies |
@@ -47,6 +47,23 @@ Not posted yet:
 | [Reddit r/LangChain: testing AI agents before deploying](https://www.reddit.com/r/LangChain/comments/1wsduk3/how_are_you_testing_ai_agents_before_deploying/) | Practitioners care about tool/API use, data access, auth boundaries, escalation behavior, and intermediate steps, not just final answers. | Keep proposals evidence-backed and explicit about validation, risk, rollback, and allowed improvement surfaces. |
 | [Langfuse community](https://langfuse.com/community) | Langfuse maintains active community channels for observability and eval workflows. | Good outreach target for workflow feedback, especially integration fit and artifact boundaries. |
 | [Phoenix docs](https://arize.com/docs/phoenix/) | Phoenix/OpenInference users already work with tracing, evaluations, experiments, and OpenTelemetry/OpenInference concepts. | Good outreach target for whether ACP should stay downstream of traces or expose deeper OpenInference semantics. |
+
+## Direct Feedback Themes
+
+Reddit feedback strengthened the case for ACP as a PR-adjacent review artifact,
+not a separate decision system. The most adoption-friendly shape may be a file
+that can also render as a PR template or checklist, with direct trace/eval links
+and concise expected behavior changes.
+
+The strongest schema pressure is around validation evidence:
+
+- include negative or counterfactual cases where the fix must not apply;
+- compare old/new verdict flips on the same frozen trace set;
+- pin trace/eval sets to immutable versions and cite verdicts per trace;
+- include canary guardrails for unchanged traffic, especially latency and cost;
+- show judge calibration against human verdicts when LLM judges are used;
+- allow `UNKNOWN` or insufficient-evidence outcomes instead of forcing a false
+  pass/fail.
 
 ## Outreach Targets
 

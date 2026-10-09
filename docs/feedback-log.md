@@ -5,12 +5,16 @@ messages. Link back to public sources when possible.
 
 ## Summary
 
-- Feedback items collected: 2
-- Strongest positive signal: useful for eval review and incident follow-up.
-- Strongest adoption blocker: CI-gate semantics and approval integrity are not
-  structured enough yet.
+- Feedback items collected: 4
+- Strongest positive signal: useful for eval review, incident follow-up, and
+  PR-adjacent review when code diffs cannot show agent behavior clearly.
+- Strongest adoption blocker: a standalone file may feel like extra ceremony
+  unless it fits existing PR workflows and links directly to trace/eval
+  evidence.
 - Schema changes justified by repeated feedback: machine-readable validation
-  should live under `validation`; evidence should stay separate from gate rules.
+  should live under `validation`; evidence should stay separate from gate
+  rules; validation should cover negative/counterfactual cases, frozen trace
+  sets, verdict diffs, and canary guardrails.
 
 ## Outreach
 
@@ -18,9 +22,9 @@ messages. Link back to public sources when possible.
 | --- | --- | --- | --- |
 | 2026-10-04 | Langfuse GitHub Discussions | <https://github.com/orgs/langfuse/discussions/18200> | Waiting for replies |
 | 2026-10-04 | Phoenix GitHub Discussions | <https://github.com/Arize-ai/phoenix/discussions/16767> | Waiting for replies |
-| 2026-10-06 | Reddit r/AI_Agents | <https://www.reddit.com/r/AI_Agents/comments/1wz9ei5/how_do_you_review_proposed_agent_behavior_changes/> | Waiting for replies |
-| 2026-10-06 | Reddit r/AutoGPT | <https://www.reddit.com/r/AutoGPT/comments/1wz9iig/how_do_you_review_behavior_changes_for_autonomous/> | Waiting for replies |
-| 2026-10-06 | Reddit r/AIQuality | <https://www.reddit.com/r/AIQuality/comments/1wz9jg7/what_evidence_makes_an_ai_agent_behavior_change/> | Waiting for replies |
+| 2026-10-06 | Reddit r/AI_Agents | <https://www.reddit.com/r/AI_Agents/comments/1wz9ei5/how_do_you_review_proposed_agent_behavior_changes/> | 12 comments; feedback summarized |
+| 2026-10-06 | Reddit r/AutoGPT | <https://www.reddit.com/r/AutoGPT/comments/1wz9iig/how_do_you_review_behavior_changes_for_autonomous/> | 1 comment; feedback summarized |
+| 2026-10-06 | Reddit r/AIQuality | <https://www.reddit.com/r/AIQuality/comments/1wz9jg7/what_evidence_makes_an_ai_agent_behavior_change/> | No comments yet |
 | 2026-10-07 | DeepEval GitHub Discussions | <https://github.com/confident-ai/deepeval/discussions/3427> | Waiting for replies |
 | 2026-10-07 | Helicone GitHub Discussions | <https://github.com/Helicone/helicone/discussions/5833> | Waiting for replies |
 | 2026-10-07 | OpenLLMetry GitHub Discussions | <https://github.com/traceloop/openllmetry/discussions/4579> | Waiting for replies |
@@ -46,10 +50,13 @@ direct feedback on the project.
 | --- | --- | --- | --- | --- | --- |
 | 2026-10-06 | [GitHub discussion #6](https://github.com/vittorfp/agent-change-proposals/discussions/6#discussioncomment-18783719) | Public reviewer of v0.5 proposal format | schema-gap, trust-gap | Useful for eval review and incident follow-up, but not ready as a CI gate because nested proposal sections can be underspecified while still validating. Reviewer asked for machine-readable validation, immutable evidence refs, baseline/candidate artifact IDs, evaluator and dataset versions, metric threshold, sample count, rollback trigger, and plain JSON stabilization before more integrations. | Tighten V0 schema around existing nested sections first; track CI-readiness fields in issue #3 before adding new required fields. |
 | 2026-10-08 | [GitHub discussion #6](https://github.com/vittorfp/agent-change-proposals/discussions/6#discussioncomment-18815168) and [follow-up](https://github.com/vittorfp/agent-change-proposals/discussions/6#discussioncomment-18837203) | Public reviewer of v0.6 CI-gate direction | schema-gap, trust-gap | Keep gate fields under `validation`, but model them as a list of checks tied to acceptance criteria instead of flat fields or one evaluation object. This would let CI report which criterion failed while keeping prose criteria readable. Reviewer also warned that `status: accepted` is insufficient unless approval is tied to a canonical proposal digest, so edits after approval become stale. Follow-up asks whether one check can reference multiple criteria, since some checks may support several criteria at once. | Add `validation.checks` as a serious RFC 0003 alternative before schema enforcement; track approval digest/version semantics and multi-criterion check references as schema follow-ups. |
+| 2026-10-09 | [Reddit r/AI_Agents thread](https://www.reddit.com/r/AI_Agents/comments/1wz9ei5/how_do_you_review_proposed_agent_behavior_changes/) | AI agent builders and eval practitioners responding to workflow questions | artifact-fit, schema-gap, trust-gap | Several reviewers said PR comments are common but weak for behavior regressions. Repeated themes: require cases where the fix should not apply, compare old/new verdict flips instead of only aggregate scores, pin frozen trace sets to immutable versions, tie each verdict to a trace, include canary guardrails for unchanged traffic with latency/cost limits, calibrate LLM judges against human verdicts, and allow an `UNKNOWN` verdict when the baseline is too thin. | Position ACP as PR-adjacent evidence, not a replacement for PR review. Add schema/RFC follow-ups for counterfactual cases, immutable trace-set refs, verdict-diff validation, canary guardrails, judge calibration metadata, and explicit unknown/insufficient-evidence outcomes. |
+| 2026-10-09 | [Reddit r/AutoGPT comment](https://www.reddit.com/r/AutoGPT/comments/1wz9iig/how_do_you_review_behavior_changes_for_autonomous/) | AutoGPT community practitioner describing existing PR/eval workflow | artifact-fit, trust-gap | Reviewer said PR review is the real decision layer because prompts and tool config live beside code, while eval dashboards provide evidence linked from the PR. A portable file sounds like extra ceremony unless it is basically a PR template/checklist with trace links, expected behavior changes, exact tool-call or skipped-step trace snippets, before/after validation, and rollback notes for guardrail changes. | Add a PR-template/export path to the roadmap and make examples show exact trace snippets or evidence refs, before/after validation checks, and rollback notes for guardrail-sensitive changes. |
 
 ## Open Questions
 
 - Does `change_proposal` fit PR review, CI, eval review, or a different workflow?
+- Should ACP be a standalone file, a PR template/checklist, or support both?
 - Is confidence better represented at proposal level, hypothesis level, or
   evidence level?
 - Are risk and rollback specific enough to support human approval?
@@ -57,6 +64,12 @@ direct feedback on the project.
 - Should CI checks reference prose acceptance criteria by index, stable ID, or
   embedded criterion object?
 - Can one CI check satisfy multiple acceptance criteria?
+- Should validation distinguish positive cases from negative/counterfactual
+  cases where the proposed fix must not apply?
+- Should ACP require verdict-flip summaries when old and new agents are replayed
+  over the same frozen trace set?
+- Should LLM-judge results include human-agreement calibration metadata?
+- Does the schema need an explicit `unknown` or `insufficient_evidence` verdict?
 - Should accepted proposals require approval metadata tied to a canonical
   proposal digest?
 - Which importer should become more faithful first: OpenInference/Phoenix or

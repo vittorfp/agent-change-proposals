@@ -188,6 +188,86 @@ enough if the proposal can be edited after review. A future schema should
 consider approval metadata tied to a canonical proposal digest, so edits after
 approval invalidate the prior acceptance.
 
+### Reddit Feedback: Counterfactuals, Frozen Sets, And Verdict Diffs
+
+Reddit feedback from agent and eval practitioners added more pressure toward a
+checks-based shape. The clearest repeated theme was that a proposal should not
+only show that the failing trace improved. It should also show cases where the
+fix must not apply.
+
+That suggests `validation.checks` may need to support check roles or case roles,
+for example:
+
+```json
+{
+  "validation": {
+    "method": "controlled_replay",
+    "acceptance_criteria": [
+      "Candidate retrieves policy context for refund-policy questions.",
+      "Candidate does not retrieve policy context for simple greeting turns.",
+      "Candidate introduces no pass-to-fail verdict flips on tagged guardrail cases."
+    ],
+    "checks": [
+      {
+        "criteria": [0],
+        "role": "positive",
+        "suite": "refund_policy_required",
+        "metric": "retrieval_called",
+        "op": "==",
+        "value": true,
+        "trace_set_ref": "sha256:positive-traces..."
+      },
+      {
+        "criteria": [1],
+        "role": "negative",
+        "suite": "retrieval_not_required",
+        "metric": "retrieval_called",
+        "op": "==",
+        "value": false,
+        "trace_set_ref": "sha256:negative-traces..."
+      },
+      {
+        "criteria": [2],
+        "role": "verdict_diff",
+        "suite": "guardrail_regression_set",
+        "metric": "pass_to_fail_flips",
+        "op": "==",
+        "value": 0,
+        "trace_set_ref": "sha256:guardrail-traces..."
+      }
+    ]
+  }
+}
+```
+
+Other feedback argued that reviewers should read verdict flips, not only
+aggregate scores. A future schema could represent a compact old/new comparison:
+
+```json
+{
+  "verdict_diff": {
+    "baseline_artifact_id": "replay-baseline-2026-10-09",
+    "candidate_artifact_id": "replay-candidate-2026-10-09",
+    "pass_to_fail": 0,
+    "fail_to_pass": 7,
+    "unchanged_pass": 39,
+    "unchanged_fail": 2,
+    "unknown": 0
+  }
+}
+```
+
+This feedback also introduced two concepts not covered by the original
+`validation.gate` shape:
+
+- `unknown` or `insufficient_evidence` should be a valid outcome when the
+  baseline is too thin to support a decision;
+- LLM-judge checks may need calibration metadata, such as the size of the human
+  verdict set and agreement rate, before reviewers trust the judge.
+
+These are not implementation decisions yet, but they make `validation.checks`
+look more extensible than a single gate object.
+
 ## Backward Compatibility
 
 For v0.6, these fields should be additive:
@@ -214,3 +294,11 @@ without making it globally required.
 - Should one check be allowed to reference multiple acceptance criteria?
 - Should accepted proposals include approval metadata with a canonical proposal
   digest?
+- Should validation checks have roles such as `positive`, `negative`,
+  `counterfactual`, `canary`, or `verdict_diff`?
+- Should the schema require at least one negative/counterfactual case for
+  behavior changes that could over-apply?
+- Should CI approval be based on verdict flips over a frozen trace set instead
+  of aggregate score thresholds?
+- Should LLM-judge checks include human-verdict calibration metadata?
+- Should validation outcomes include `unknown` or `insufficient_evidence`?
