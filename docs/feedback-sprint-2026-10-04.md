@@ -31,6 +31,7 @@ Direct feedback collected so far: 1.
 | 2026-10-07 | Helicone GitHub Discussions / Show and tell | <https://github.com/Helicone/helicone/discussions/5833> | Waiting for replies |
 | 2026-10-07 | OpenLLMetry GitHub Discussions / Show and tell | <https://github.com/traceloop/openllmetry/discussions/4579> | Waiting for replies |
 | 2026-10-07 | LangChain Forum / Observability & Evals | <https://forum.langchain.com/c/help/langsmith/8> | Submitted; pending moderator approval |
+| 2026-10-09 | ACP GitHub Discussions / Polls | <https://github.com/vittorfp/agent-change-proposals/discussions/9> | Waiting for design feedback |
 
 Not posted yet:
 

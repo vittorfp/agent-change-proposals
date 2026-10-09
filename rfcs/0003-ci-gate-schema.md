@@ -1,8 +1,8 @@
 # RFC 0003: CI-Ready Validation Fields
 
-Status: Draft  
-Schema version target: `0.6`  
-Discussion: https://github.com/vittorfp/agent-change-proposals/discussions/6  
+Status: Draft
+Schema version target: `0.6`
+Discussion: https://github.com/vittorfp/agent-change-proposals/discussions/9
 Related issue: https://github.com/vittorfp/agent-change-proposals/issues/3
 
 ## Summary
