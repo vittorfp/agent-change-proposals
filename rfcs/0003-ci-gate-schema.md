@@ -183,6 +183,39 @@ well-formed." A possible shape is:
 That flexibility makes duplicate checks less likely, but makes failure
 reporting slightly less direct than a single `criterion` field.
 
+A follow-up suggested that stable criterion IDs are better than array indexes
+once criteria become structured. Index references are easy to prototype, but
+they become brittle when criteria are reordered. Stable refs also create a
+clear CI failure mode: a misspelled or deleted criterion reference can be
+rejected outright instead of silently orphaning a check. A later schema could
+look like:
+
+```json
+{
+  "validation": {
+    "acceptance_criteria": [
+      {
+        "id": "retrieval-required",
+        "description": "Candidate run includes at least one retrieval span for this case."
+      },
+      {
+        "id": "no-regression",
+        "description": "Candidate/baseline comparison stays well-formed with no dropped cases."
+      }
+    ],
+    "checks": [
+      {
+        "criterion_refs": ["retrieval-required", "no-regression"],
+        "suite": "replay_integrity",
+        "metric": "row_count_delta",
+        "op": "==",
+        "value": 0
+      }
+    ]
+  }
+}
+```
+
 The same feedback also raised approval integrity: `status: accepted` is not
 enough if the proposal can be edited after review. A future schema should
 consider approval metadata tied to a canonical proposal digest, so edits after
@@ -289,8 +322,8 @@ without making it globally required.
 - Should rollback triggers live in both `validation.gate` and `rollback`, or
   should `rollback` reference the gate trigger?
 - Should CI decide on all metrics or only metrics marked `required: true`?
-- Should checks reference acceptance criteria by array index, stable criterion
-  ID, or an embedded object?
+- Should checks reference acceptance criteria by stable criterion ID, and
+  should dangling check refs fail validation?
 - Should one check be allowed to reference multiple acceptance criteria?
 - Should accepted proposals include approval metadata with a canonical proposal
   digest?

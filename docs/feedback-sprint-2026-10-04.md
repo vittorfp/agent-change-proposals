@@ -64,6 +64,8 @@ The strongest schema pressure is around validation evidence:
 - show judge calibration against human verdicts when LLM judges are used;
 - allow `UNKNOWN` or insufficient-evidence outcomes instead of forcing a false
   pass/fail.
+- use stable acceptance-criterion IDs for machine checks, so broken or misspelled
+  refs fail validation instead of silently orphaning a check.
 
 ## Outreach Targets
 
