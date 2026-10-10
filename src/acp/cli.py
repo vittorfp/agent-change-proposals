@@ -15,7 +15,7 @@ from acp.importers import (
 from acp.io import dump_data, load_data
 from acp.proposals import build_proposal_with_coverage
 from acp.replay import compare_replay_results
-from acp.schemas import SCHEMAS, schema_names
+from acp.schemas import SCHEMAS, schema_names, validate_instance
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -135,7 +135,7 @@ def main(argv: list[str] | None = None) -> int:
 
 def _validate(schema_name: str, path: str) -> int:
     data = load_data(path)
-    validate(instance=data, schema=SCHEMAS[schema_name])
+    validate_instance(schema_name, data)
     print(f"valid: {path}")
     return 0
 
@@ -172,7 +172,7 @@ def _bundle_check(
     if candidate is not None:
         validate(instance=candidate, schema=SCHEMAS["replay_bundle"])
     if proposal is not None:
-        validate(instance=proposal, schema=SCHEMAS["change_proposal"])
+        validate_instance("change_proposal", proposal)
     if agent_manifest is not None:
         validate(instance=agent_manifest, schema=SCHEMAS["agent_manifest"])
     if domain_context is not None:
@@ -226,7 +226,7 @@ def _proposal_from_trace(
         domain_context=domain_context,
         created_at=created_at,
     )
-    validate(instance=proposal, schema=SCHEMAS["change_proposal"])
+    validate_instance("change_proposal", proposal)
     dump_data(Path(output_path), proposal)
     if coverage_output_path:
         dump_data(Path(coverage_output_path), coverage)

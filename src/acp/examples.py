@@ -9,7 +9,7 @@ from acp.importers import langfuse_observations_to_trace_export, openinference_t
 from acp.io import load_data
 from acp.proposals import build_proposal
 from acp.replay import compare_replay_results
-from acp.schemas import SCHEMAS
+from acp.schemas import SCHEMAS, validate_instance
 
 FIXED_EXAMPLE_CREATED_AT = "2026-10-02T00:00:00+00:00"
 
@@ -40,7 +40,7 @@ def _verify_example(example_dir: Path) -> dict[str, Any]:
         validate(instance=agent_manifest, schema=SCHEMAS["agent_manifest"])
     if domain_context is not None:
         validate(instance=domain_context, schema=SCHEMAS["domain_context"])
-    validate(instance=checked_in_proposal, schema=SCHEMAS["change_proposal"])
+    validate_instance("change_proposal", checked_in_proposal)
 
     generated_proposal = build_proposal(
         trace_export,
@@ -50,7 +50,7 @@ def _verify_example(example_dir: Path) -> dict[str, Any]:
         domain_context=domain_context,
         created_at=FIXED_EXAMPLE_CREATED_AT,
     )
-    validate(instance=generated_proposal, schema=SCHEMAS["change_proposal"])
+    validate_instance("change_proposal", generated_proposal)
     if generated_proposal != checked_in_proposal:
         raise ValueError(f"checked-in proposal is stale for example: {example_dir.name}")
 

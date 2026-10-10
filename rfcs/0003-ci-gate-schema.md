@@ -310,8 +310,11 @@ For v0.6, these fields should be additive:
 - stricter validation applies only when `validation.gate` is present;
 - examples should show the expected shape before the schema requires it.
 
-The next implementation step is to add schema validation for `validation.gate`
-without making it globally required.
+The next implementation step is to exercise `validation.checks` in examples and
+CLI validation before deciding whether `validation.gate` should remain as a
+wrapper. The first implementation pass should keep these fields optional, reject
+dangling `criterion_refs`, and preserve compatibility with string-only
+`acceptance_criteria`.
 
 ## Open Questions
 

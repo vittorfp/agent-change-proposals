@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from jsonschema import ValidationError, validate
+
 CHANGE_PROPOSAL_SCHEMA = {
     "type": "object",
     "required": [
@@ -91,8 +93,66 @@ CHANGE_PROPOSAL_SCHEMA = {
                 "acceptance_criteria": {
                     "type": "array",
                     "minItems": 1,
-                    "items": {"type": "string", "minLength": 1},
+                    "items": {
+                        "oneOf": [
+                            {"type": "string", "minLength": 1},
+                            {
+                                "type": "object",
+                                "required": ["id", "description"],
+                                "properties": {
+                                    "id": {"type": "string", "minLength": 1},
+                                    "description": {"type": "string", "minLength": 1},
+                                },
+                            },
+                        ],
+                    },
                 },
+                "checks": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "required": ["criterion_refs", "metric", "op", "value"],
+                        "properties": {
+                            "criterion_refs": {
+                                "type": "array",
+                                "minItems": 1,
+                                "items": {"type": "string", "minLength": 1},
+                            },
+                            "role": {
+                                "enum": [
+                                    "positive",
+                                    "negative",
+                                    "counterfactual",
+                                    "verdict_diff",
+                                    "canary",
+                                ]
+                            },
+                            "suite": {"type": "string", "minLength": 1},
+                            "metric": {"type": "string", "minLength": 1},
+                            "op": {"enum": [">", ">=", "<", "<=", "==", "!="]},
+                            "value": {},
+                            "min_cases": {"type": "integer", "minimum": 0},
+                            "trace_set_ref": {"type": "string", "minLength": 1},
+                            "evidence_refs": {
+                                "type": "array",
+                                "items": {"type": "string", "minLength": 1},
+                            },
+                        },
+                    },
+                },
+                "verdict_diff": {
+                    "type": "object",
+                    "properties": {
+                        "baseline_artifact_id": {"type": "string", "minLength": 1},
+                        "candidate_artifact_id": {"type": "string", "minLength": 1},
+                        "pass_to_fail": {"type": "integer", "minimum": 0},
+                        "fail_to_pass": {"type": "integer", "minimum": 0},
+                        "unchanged_pass": {"type": "integer", "minimum": 0},
+                        "unchanged_fail": {"type": "integer", "minimum": 0},
+                        "unknown": {"type": "integer", "minimum": 0},
+                    },
+                },
+                "outcome": {"enum": ["pass", "fail", "unknown", "insufficient_evidence"]},
             },
         },
         "risk": {
@@ -310,3 +370,40 @@ SCHEMAS = load_public_schemas()
 
 def schema_names() -> list[str]:
     return sorted(SCHEMAS)
+
+
+def validate_instance(schema_name: str, instance: object) -> None:
+    validate(instance=instance, schema=SCHEMAS[schema_name])
+    if schema_name == "change_proposal" and isinstance(instance, dict):
+        validate_change_proposal_semantics(instance)
+
+
+def validate_change_proposal_semantics(proposal: dict) -> None:
+    validation = proposal.get("validation")
+    if not isinstance(validation, dict):
+        return
+
+    criteria = validation.get("acceptance_criteria", [])
+    criterion_ids = {
+        criterion["id"]
+        for criterion in criteria
+        if isinstance(criterion, dict) and isinstance(criterion.get("id"), str)
+    }
+
+    checks = validation.get("checks", [])
+    if not checks:
+        return
+
+    if not criterion_ids:
+        raise ValidationError(
+            "validation.checks requires structured acceptance_criteria with stable ids"
+        )
+
+    for index, check in enumerate(checks):
+        if not isinstance(check, dict):
+            continue
+        refs = check.get("criterion_refs", [])
+        dangling = [ref for ref in refs if ref not in criterion_ids]
+        if dangling:
+            joined = ", ".join(sorted(dangling))
+            raise ValidationError(f"validation.checks[{index}] has unknown criterion_refs: {joined}")

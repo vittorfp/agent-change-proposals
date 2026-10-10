@@ -6,7 +6,7 @@ import json
 import yaml
 from jsonschema import validate
 
-from acp.schemas import SCHEMAS
+from acp.schemas import SCHEMAS, validate_instance
 
 REQUIRED_ISSUE_TEMPLATES = {
     "feedback.md": {"label": "feedback"},
@@ -72,3 +72,26 @@ def test_ci_gate_rfc_example_matches_current_change_proposal_schema() -> None:
     validate(instance=proposal, schema=SCHEMAS["change_proposal"])
     assert proposal["validation"]["gate"]["mode"] == "blocking"
     assert proposal["validation"]["gate"]["required_evidence_refs"]
+
+
+def test_pr_ready_rfc_example_matches_current_change_proposal_schema() -> None:
+    root = Path(__file__).resolve().parents[1]
+    path = root / "rfcs" / "examples" / "pr-ready.change_proposal.example.json"
+
+    proposal = json.loads(path.read_text(encoding="utf-8"))
+
+    validate_instance("change_proposal", proposal)
+    criteria = proposal["validation"]["acceptance_criteria"]
+    checks = proposal["validation"]["checks"]
+    assert {criterion["id"] for criterion in criteria} == {
+        "retrieval-required",
+        "counterfactual-no-overapply",
+        "no-guardrail-regression",
+        "canary-latency-cost",
+    }
+    assert {check["role"] for check in checks} == {
+        "positive",
+        "negative",
+        "verdict_diff",
+        "canary",
+    }

@@ -147,6 +147,58 @@ def test_change_proposal_schema_rejects_underspecified_nested_sections() -> None
         validate(instance=sparse_proposal, schema=CHANGE_PROPOSAL_SCHEMA)
 
 
+def test_validate_rejects_dangling_validation_check_refs(
+    capsys: pytest.CaptureFixture[str], tmp_path: Path
+) -> None:
+    proposal = {
+        "schema_version": "0.6-draft",
+        "proposal_id": "acp_dangling_ref",
+        "title": "Reject dangling validation refs",
+        "status": "proposed",
+        "problem": {"summary": "A check points at a missing criterion."},
+        "evidence": [{"type": "trace_pattern", "observed": "Example evidence."}],
+        "hypothesis": {"summary": "The check is orphaned.", "confidence": "high"},
+        "proposed_change": {
+            "target": {
+                "target_id": "retrieval_policy.main",
+                "type": "retrieval_policy",
+                "component": "main_retriever",
+            },
+            "summary": "No-op for validation test.",
+        },
+        "validation": {
+            "method": "controlled_replay",
+            "acceptance_criteria": [
+                {"id": "existing-criterion", "description": "Existing criterion."}
+            ],
+            "checks": [
+                {
+                    "criterion_refs": ["missing-criterion"],
+                    "metric": "retrieval_called",
+                    "op": "==",
+                    "value": True,
+                }
+            ],
+        },
+        "risk": {"level": "low", "notes": "Validation-only fixture."},
+        "rollback": {"plan": "No-op."},
+    }
+    proposal_path = tmp_path / "proposal.json"
+    proposal_path.write_text(json.dumps(proposal), encoding="utf-8")
+
+    result = main(["validate", "change_proposal", str(proposal_path)])
+
+    assert result == 1
+    assert "unknown criterion_refs: missing-criterion" in capsys.readouterr().err
+
+
+def test_validate_accepts_structured_validation_checks(tmp_path: Path) -> None:
+    root = Path(__file__).resolve().parents[1]
+    proposal_path = root / "rfcs" / "examples" / "pr-ready.change_proposal.example.json"
+
+    assert main(["validate", "change_proposal", str(proposal_path)]) == 0
+
+
 def test_declared_intent_contracts_are_valid() -> None:
     root = Path(__file__).resolve().parents[1]
     example = root / "examples/declared-intent"

@@ -89,7 +89,67 @@
         "acceptance_criteria": {
           "type": "array",
           "minItems": 1,
-          "items": { "type": "string", "minLength": 1 }
+          "items": {
+            "oneOf": [
+              { "type": "string", "minLength": 1 },
+              {
+                "type": "object",
+                "required": ["id", "description"],
+                "properties": {
+                  "id": { "type": "string", "minLength": 1 },
+                  "description": { "type": "string", "minLength": 1 }
+                }
+              }
+            ]
+          }
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["criterion_refs", "metric", "op", "value"],
+            "properties": {
+              "criterion_refs": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "string", "minLength": 1 }
+              },
+              "role": {
+                "enum": [
+                  "positive",
+                  "negative",
+                  "counterfactual",
+                  "verdict_diff",
+                  "canary"
+                ]
+              },
+              "suite": { "type": "string", "minLength": 1 },
+              "metric": { "type": "string", "minLength": 1 },
+              "op": { "enum": [">", ">=", "<", "<=", "==", "!="] },
+              "value": {},
+              "min_cases": { "type": "integer", "minimum": 0 },
+              "trace_set_ref": { "type": "string", "minLength": 1 },
+              "evidence_refs": {
+                "type": "array",
+                "items": { "type": "string", "minLength": 1 }
+              }
+            }
+          }
+        },
+        "verdict_diff": {
+          "type": "object",
+          "properties": {
+            "baseline_artifact_id": { "type": "string", "minLength": 1 },
+            "candidate_artifact_id": { "type": "string", "minLength": 1 },
+            "pass_to_fail": { "type": "integer", "minimum": 0 },
+            "fail_to_pass": { "type": "integer", "minimum": 0 },
+            "unchanged_pass": { "type": "integer", "minimum": 0 },
+            "unchanged_fail": { "type": "integer", "minimum": 0 },
+            "unknown": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "outcome": {
+          "enum": ["pass", "fail", "unknown", "insufficient_evidence"]
         }
       }
     },
