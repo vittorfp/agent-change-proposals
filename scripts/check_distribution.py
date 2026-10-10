@@ -6,6 +6,7 @@ from pathlib import Path
 REQUIRED_SDIST_PATHS = [
     ".github/PULL_REQUEST_TEMPLATE.md",
     ".github/ISSUE_TEMPLATE/workflow-feedback.md",
+    "CHANGELOG.md",
     "CODE_OF_CONDUCT.md",
     "CONTRIBUTING.md",
     "ROADMAP.md",
@@ -15,6 +16,7 @@ REQUIRED_SDIST_PATHS = [
     "examples/rag-missed-retrieval/change_proposal.example.json",
     "rfcs/0001-change-proposal.md",
     "rfcs/0002-agent-manifest-domain-context.md",
+    "rfcs/examples/pr-ready.change_proposal.example.json",
     "schemas/agent_manifest.schema.json",
     "schemas/change_proposal.schema.json",
     "schemas/domain_context.schema.json",

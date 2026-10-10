@@ -23,8 +23,9 @@ OpenInference, Phoenix, Langfuse, LangSmith, or custom eval pipelines.
 
 ACP has a working local CLI, public schemas, checked-in examples, and
 file-based import paths for OpenInference/Phoenix-style spans and Langfuse
-observation exports. The project is now looking for feedback on whether
-`change_proposal` is a useful review artifact.
+observation exports. The current v0.6 direction is PR-ready validation checks:
+proposals can keep human-readable acceptance criteria while adding optional
+machine-checkable `validation.checks`.
 
 See [ROADMAP.md](ROADMAP.md) for current priorities.
 
@@ -56,6 +57,61 @@ targets ACP may discuss, for example:
 ACP can only propose changes to declared targets. V0 schemas are intentionally
 permissive while the project learns from real workflows; examples and the RFC
 show the intended review shape.
+
+## PR-Ready Validation Checks
+
+Feedback from early reviewers pushed ACP toward a PR-adjacent artifact rather
+than a separate approval system. A proposal can now carry stable acceptance
+criterion IDs and optional checks that point back to those criteria:
+
+```json
+{
+  "validation": {
+    "method": "controlled_replay",
+    "acceptance_criteria": [
+      {
+        "id": "retrieval-required",
+        "description": "Candidate retrieves policy context before answering refund-policy eligibility questions."
+      },
+      {
+        "id": "counterfactual-no-overapply",
+        "description": "Candidate does not force retrieval on simple non-policy turns."
+      }
+    ],
+    "checks": [
+      {
+        "criterion_refs": ["retrieval-required"],
+        "role": "positive",
+        "suite": "refund_policy_required",
+        "metric": "retrieval_called",
+        "op": "==",
+        "value": true
+      },
+      {
+        "criterion_refs": ["counterfactual-no-overapply"],
+        "role": "negative",
+        "suite": "retrieval_not_required",
+        "metric": "retrieval_called",
+        "op": "==",
+        "value": false
+      }
+    ]
+  }
+}
+```
+
+Supported check roles include `positive`, `negative`, `counterfactual`,
+`verdict_diff`, and `canary`. The CLI rejects dangling `criterion_refs`, so a
+misspelled criterion ID fails validation instead of becoming an orphaned check:
+
+```bash
+acp validate change_proposal rfcs/examples/pr-ready.change_proposal.example.json
+```
+
+See the full
+[PR-ready example](rfcs/examples/pr-ready.change_proposal.example.json) for
+trace refs, counterfactual cases, verdict diffs, canary guardrails, and rollback
+notes.
 
 ## V0 Flow
 
@@ -131,6 +187,7 @@ acp proposal from-trace \
 
 For the full walkthrough, read [docs/first-proposal.md](docs/first-proposal.md).
 For positioning, read [docs/not-an-observability-platform.md](docs/not-an-observability-platform.md).
+For release history, read [CHANGELOG.md](CHANGELOG.md).
 For feedback, join [the public discussion](https://github.com/vittorfp/agent-change-proposals/discussions/6),
 open a workflow/schema issue using the GitHub issue templates, or read
 [docs/feedback-playbook.md](docs/feedback-playbook.md).
@@ -162,6 +219,7 @@ The proposed CI-gate validation shape is described in
 - [Missing escalation](examples/missing-escalation)
 - [OpenInference/Phoenix-style import](examples/openinference-phoenix)
 - [Langfuse export import](examples/langfuse-export)
+- [PR-ready validation-check draft](rfcs/examples/pr-ready.change_proposal.example.json)
 
 Each example includes a checked-in `change_proposal.example.json` so reviewers
 can inspect the output without running the CLI.

@@ -11,7 +11,8 @@ The project has a working local CLI, public schemas, checked-in examples, and
 file-based import paths for OpenInference/Phoenix-style spans and Langfuse
 observation exports. It also has optional declared-intent contracts, semantic
 bundle checks, import diagnostics, and proposal coverage reports so early users
-can see where evidence is missing.
+can see where evidence is missing. The current v0.6 direction adds PR-ready
+validation checks tied to stable acceptance-criterion IDs.
 
 The next important milestone is feedback from people who run agent evals,
 observability pipelines, or internal agent platforms.
@@ -27,31 +28,38 @@ observability pipelines, or internal agent platforms.
 2. **Refine the `change_proposal` schema**
    - Improve field names, required evidence, confidence, risk, and validation
      structure based on feedback.
-   - Draft a v0.6 CI-gate shape around `validation.gate` and immutable
-     evidence refs before making new fields globally required.
+   - Exercise a v0.6 shape around `validation.checks`,
+     `criterion_refs`, verdict diffs, counterfactual checks, and canary
+     guardrails before making new fields globally required.
    - Issue: https://github.com/vittorfp/agent-change-proposals/issues/3
    - Draft RFC: [rfcs/0001-change-proposal.md](rfcs/0001-change-proposal.md)
    - CI-gate RFC: [rfcs/0003-ci-gate-schema.md](rfcs/0003-ci-gate-schema.md)
 
-3. **Validate optional declared-intent contracts**
+3. **Render proposals as PR checklists**
+   - Keep ACP PR-adjacent rather than creating a separate approval surface.
+   - Turn `change_proposal` files into concise PR descriptions or checklists
+     with evidence links, validation checks, risk, and rollback notes.
+
+4. **Validate optional declared-intent contracts**
    - Keep `agent_manifest` and `domain_context` optional.
    - Use them only to enrich proposal evidence and validation criteria.
    - Do not let them replace `improvement_surface` as the trust boundary.
    - Draft RFC: [rfcs/0002-agent-manifest-domain-context.md](rfcs/0002-agent-manifest-domain-context.md)
 
-4. **Improve ecosystem import fidelity**
+5. **Improve ecosystem import fidelity**
    - Keep imports file-based for now.
    - Prefer small, documented fixtures over live API dependencies.
    - Use diagnostics to make skipped records and coverage gaps visible.
    - Add fields only when they improve proposal quality.
 
-5. **Make replay more reviewable**
+6. **Make replay more reviewable**
    - Keep controlled replay honest about its limits.
    - Improve reports so they are easy to use in PR/CI review.
 
 ## Later, If The Artifact Proves Useful
 
 - GitHub Action that comments a proposal and replay report on a PR.
+- Markdown renderer for PR checklist output.
 - More realistic export fixtures from production-grade observability tools.
 - Stronger schema versioning and migration notes.
 - Optional package publishing.
