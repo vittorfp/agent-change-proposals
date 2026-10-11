@@ -9,14 +9,14 @@ help decide where to ask and what questions to ask.
 
 ## Current State
 
-- Latest release: <https://github.com/vittorfp/agent-change-proposals/releases/tag/v0.5.0>
+- Latest release: <https://github.com/vittorfp/agent-change-proposals/releases/tag/v0.6.0>
 - Public discussion: <https://github.com/vittorfp/agent-change-proposals/discussions/6>
 - Feedback issue: <https://github.com/vittorfp/agent-change-proposals/issues/5>
 - Schema follow-up issue: <https://github.com/vittorfp/agent-change-proposals/issues/3>
 - Best review example:
-  [`examples/declared-intent/change_proposal.example.json`](../examples/declared-intent/change_proposal.example.json)
+  [`rfcs/examples/pr-ready.change_proposal.example.json`](../rfcs/examples/pr-ready.change_proposal.example.json)
 
-Direct feedback collected so far: 4.
+Direct feedback collected so far: 5.
 
 ## Outreach Posted
 
@@ -66,6 +66,8 @@ The strongest schema pressure is around validation evidence:
   pass/fail.
 - use stable acceptance-criterion IDs for machine checks, so broken or misspelled
   refs fail validation instead of silently orphaning a check.
+- render proposals as PR checklists so the artifact fits existing review
+  workflows instead of creating a separate approval surface.
 
 ## Outreach Targets
 
@@ -97,8 +99,8 @@ a reviewable proposal:
 - how to roll it back.
 
 Repo: https://github.com/vittorfp/agent-change-proposals
-Latest release: https://github.com/vittorfp/agent-change-proposals/releases/tag/v0.5.0
-Example proposal: https://github.com/vittorfp/agent-change-proposals/blob/main/examples/declared-intent/change_proposal.example.json
+Latest release: https://github.com/vittorfp/agent-change-proposals/releases/tag/v0.6.0
+Example proposal: https://github.com/vittorfp/agent-change-proposals/blob/main/rfcs/examples/pr-ready.change_proposal.example.json
 Discussion: https://github.com/vittorfp/agent-change-proposals/discussions/6
 
 The feedback I need is workflow-level:

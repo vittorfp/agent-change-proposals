@@ -5,7 +5,7 @@ messages. Link back to public sources when possible.
 
 ## Summary
 
-- Feedback items collected: 4
+- Feedback items collected: 5
 - Strongest positive signal: useful for eval review, incident follow-up, and
   PR-adjacent review when code diffs cannot show agent behavior clearly.
 - Strongest adoption blocker: a standalone file may feel like extra ceremony
@@ -52,6 +52,7 @@ direct feedback on the project.
 | 2026-10-08 | [GitHub discussion #6](https://github.com/vittorfp/agent-change-proposals/discussions/6#discussioncomment-18815168), [follow-up](https://github.com/vittorfp/agent-change-proposals/discussions/6#discussioncomment-18837203), and [criterion-ref follow-up](https://github.com/vittorfp/agent-change-proposals/discussions/6#discussioncomment-18837408) | Public reviewer of v0.6 CI-gate direction | schema-gap, trust-gap | Keep gate fields under `validation`, but model them as a list of checks tied to acceptance criteria instead of flat fields or one evaluation object. This would let CI report which criterion failed while keeping prose criteria readable. Reviewer also warned that `status: accepted` is insufficient unless approval is tied to a canonical proposal digest, so edits after approval become stale. Follow-ups ask whether one check can reference multiple criteria and favor stable criterion IDs over array indexes, so a dangling check ref can fail CI instead of becoming silently orphaned. | Add `validation.checks` as a serious RFC 0003 alternative before schema enforcement; track approval digest/version semantics, multi-criterion check references, stable criterion IDs, and dangling-ref validation as schema follow-ups. |
 | 2026-10-09 | [Reddit r/AI_Agents thread](https://www.reddit.com/r/AI_Agents/comments/1wz9ei5/how_do_you_review_proposed_agent_behavior_changes/) | AI agent builders and eval practitioners responding to workflow questions | artifact-fit, schema-gap, trust-gap | Several reviewers said PR comments are common but weak for behavior regressions. Repeated themes: require cases where the fix should not apply, compare old/new verdict flips instead of only aggregate scores, pin frozen trace sets to immutable versions, tie each verdict to a trace, include canary guardrails for unchanged traffic with latency/cost limits, calibrate LLM judges against human verdicts, and allow an `UNKNOWN` verdict when the baseline is too thin. | Position ACP as PR-adjacent evidence, not a replacement for PR review. Add schema/RFC follow-ups for counterfactual cases, immutable trace-set refs, verdict-diff validation, canary guardrails, judge calibration metadata, and explicit unknown/insufficient-evidence outcomes. |
 | 2026-10-09 | [Reddit r/AutoGPT comment](https://www.reddit.com/r/AutoGPT/comments/1wz9iig/how_do_you_review_behavior_changes_for_autonomous/) | AutoGPT community practitioner describing existing PR/eval workflow | artifact-fit, trust-gap | Reviewer said PR review is the real decision layer because prompts and tool config live beside code, while eval dashboards provide evidence linked from the PR. A portable file sounds like extra ceremony unless it is basically a PR template/checklist with trace links, expected behavior changes, exact tool-call or skipped-step trace snippets, before/after validation, and rollback notes for guardrail changes. | Add a PR-template/export path to the roadmap and make examples show exact trace snippets or evidence refs, before/after validation checks, and rollback notes for guardrail-sensitive changes. |
+| 2026-10-11 | [GitHub discussion #6 follow-up](https://github.com/vittorfp/agent-change-proposals/discussions/6#discussioncomment-18859409) | Public reviewer who proposed stable validation-check refs | implementation-validation | Reviewer confirmed that CLI rejection of dangling criterion refs is the expected behavior and that keeping the new structured fields additive while the shape settles makes sense. | Treat stable criterion IDs plus dangling-ref validation as validated enough for the current v0.6 line. Continue collecting feedback before making `validation.checks` required for every proposal. |
 
 ## Open Questions
 
@@ -70,7 +71,7 @@ direct feedback on the project.
   over the same frozen trace set?
 - Should LLM-judge results include human-agreement calibration metadata?
 - Does the schema need an explicit `unknown` or `insufficient_evidence` verdict?
-- Should accepted proposals require approval metadata tied to a canonical
+- Should accepted proposals require more approval metadata beyond the canonical
   proposal digest?
 - Which importer should become more faithful first: OpenInference/Phoenix or
   Langfuse?
