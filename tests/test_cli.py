@@ -199,6 +199,24 @@ def test_validate_accepts_structured_validation_checks(tmp_path: Path) -> None:
     assert main(["validate", "change_proposal", str(proposal_path)]) == 0
 
 
+def test_proposal_render_pr_outputs_review_checklist(tmp_path: Path) -> None:
+    root = Path(__file__).resolve().parents[1]
+    proposal_path = root / "rfcs" / "examples" / "pr-ready.change_proposal.example.json"
+    output = tmp_path / "proposal.md"
+
+    result = main(["proposal", "render-pr", str(proposal_path), "--output", str(output)])
+
+    assert result == 0
+    markdown = output.read_text(encoding="utf-8")
+    assert "# Require retrieval for refund-policy questions without over-applying" in markdown
+    assert "- [ ] `retrieval-required` Candidate retrieves policy context" in markdown
+    assert "`positive: refund_policy_required retrieval_called == true" in markdown
+    assert "## Evidence" in markdown
+    assert "`evidence:trace:run_refund_policy_041:no-retrieval`" in markdown
+    assert "## Risk" in markdown
+    assert "## Rollback" in markdown
+
+
 def test_declared_intent_contracts_are_valid() -> None:
     root = Path(__file__).resolve().parents[1]
     example = root / "examples/declared-intent"

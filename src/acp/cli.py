@@ -13,7 +13,7 @@ from acp.importers import (
     openinference_to_trace_export_with_diagnostics,
 )
 from acp.io import dump_data, load_data
-from acp.proposals import build_proposal_with_coverage
+from acp.proposals import build_proposal_with_coverage, render_proposal_pr_checklist
 from acp.replay import compare_replay_results
 from acp.schemas import SCHEMAS, schema_names, validate_instance
 
@@ -52,6 +52,9 @@ def main(argv: list[str] | None = None) -> int:
     from_trace_parser.add_argument("--output", required=True)
     from_trace_parser.add_argument("--coverage-output")
     from_trace_parser.add_argument("--created-at")
+    render_pr_parser = proposal_subparsers.add_parser("render-pr")
+    render_pr_parser.add_argument("proposal")
+    render_pr_parser.add_argument("--output")
 
     replay_parser = subparsers.add_parser("replay")
     replay_subparsers = replay_parser.add_subparsers(dest="replay_command", required=True)
@@ -113,6 +116,8 @@ def main(argv: list[str] | None = None) -> int:
                 coverage_output_path=args.coverage_output,
                 created_at=args.created_at,
             )
+        if args.command == "proposal" and args.proposal_command == "render-pr":
+            return _proposal_render_pr(args.proposal, args.output)
         if args.command == "replay" and args.replay_command == "compare":
             return _replay_compare(args.baseline, args.candidate, args.output)
         if args.command == "import" and args.import_command == "openinference":
@@ -232,6 +237,20 @@ def _proposal_from_trace(
         dump_data(Path(coverage_output_path), coverage)
         print(f"wrote: {coverage_output_path}")
     print(f"wrote: {output_path}")
+    return 0
+
+
+def _proposal_render_pr(proposal_path: str, output_path: str | None = None) -> int:
+    proposal = load_data(proposal_path)
+    validate_instance("change_proposal", proposal)
+    markdown = render_proposal_pr_checklist(proposal)
+    if output_path:
+        destination = Path(output_path)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_text(markdown, encoding="utf-8")
+        print(f"wrote: {output_path}")
+    else:
+        print(markdown, end="")
     return 0
 
 

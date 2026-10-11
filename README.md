@@ -113,6 +113,13 @@ See the full
 trace refs, counterfactual cases, verdict diffs, canary guardrails, and rollback
 notes.
 
+Render a proposal as Markdown for a PR description or PR comment:
+
+```bash
+acp proposal render-pr rfcs/examples/pr-ready.change_proposal.example.json \
+  --output proposal-checklist.md
+```
+
 ## V0 Flow
 
 ```text

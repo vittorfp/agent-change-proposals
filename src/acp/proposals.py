@@ -40,6 +40,82 @@ def build_proposal(
     return proposal
 
 
+def render_proposal_pr_checklist(proposal: dict[str, Any]) -> str:
+    target = proposal.get("proposed_change", {}).get("target", {})
+    validation = proposal.get("validation", {})
+    criteria = _normalized_acceptance_criteria(validation.get("acceptance_criteria", []))
+    checks_by_criterion = _checks_by_criterion(criteria, validation.get("checks", []))
+
+    lines = [
+        f"# {proposal.get('title', 'Agent change proposal')}",
+        "",
+        f"- Proposal: `{proposal.get('proposal_id', 'unknown')}`",
+        f"- Status: `{proposal.get('status', 'unknown')}`",
+        f"- Target: `{target.get('target_id', 'unknown')}` ({target.get('type', 'unknown')})",
+    ]
+    if proposal.get("created_at"):
+        lines.append(f"- Created: `{proposal['created_at']}`")
+    outcome = validation.get("outcome")
+    if outcome:
+        lines.append(f"- Validation outcome: `{outcome}`")
+
+    _add_section(lines, "Problem", proposal.get("problem", {}).get("summary"))
+    _add_section(lines, "Hypothesis", proposal.get("hypothesis", {}).get("summary"))
+    _add_section(lines, "Proposed Change", proposal.get("proposed_change", {}).get("summary"))
+
+    if criteria:
+        lines.extend(["", "## Acceptance Criteria"])
+        for criterion in criteria:
+            criterion_id = criterion["id"]
+            description = criterion["description"]
+            lines.append(f"- [ ] `{criterion_id}` {description}")
+            for check in checks_by_criterion.get(criterion_id, []):
+                lines.append(f"  - `{_render_check(check)}`")
+
+    unmatched_checks = checks_by_criterion.get("", [])
+    if unmatched_checks:
+        lines.extend(["", "## Additional Validation Checks"])
+        for check in unmatched_checks:
+            lines.append(f"- [ ] `{_render_check(check)}`")
+
+    verdict_diff = validation.get("verdict_diff")
+    if isinstance(verdict_diff, dict):
+        lines.extend(
+            [
+                "",
+                "## Verdict Diff",
+                f"- Pass to fail: `{verdict_diff.get('pass_to_fail', 'unknown')}`",
+                f"- Fail to pass: `{verdict_diff.get('fail_to_pass', 'unknown')}`",
+                f"- Unchanged pass: `{verdict_diff.get('unchanged_pass', 'unknown')}`",
+                f"- Unchanged fail: `{verdict_diff.get('unchanged_fail', 'unknown')}`",
+            ]
+        )
+
+    evidence = proposal.get("evidence", [])
+    if evidence:
+        lines.extend(["", "## Evidence"])
+        for item in evidence:
+            lines.append(f"- {_render_evidence(item)}")
+
+    risk = proposal.get("risk", {})
+    if risk:
+        lines.extend(["", "## Risk"])
+        if risk.get("level"):
+            lines.append(f"- Level: `{risk['level']}`")
+        if risk.get("notes"):
+            lines.append(f"- Notes: {risk['notes']}")
+
+    rollback = proposal.get("rollback", {})
+    if rollback:
+        lines.extend(["", "## Rollback"])
+        if rollback.get("plan"):
+            lines.append(f"- Plan: {rollback['plan']}")
+        if rollback.get("trigger_ref"):
+            lines.append(f"- Trigger: `{rollback['trigger_ref']}`")
+
+    return "\n".join(lines).rstrip() + "\n"
+
+
 def build_proposal_with_coverage(
     trace_export: dict[str, Any],
     outcomes: list[dict[str, Any]],
@@ -88,6 +164,84 @@ def build_proposal_with_coverage(
     proposal = _no_pattern_proposal(trace_export, outcomes, surface, created_at)
     _apply_declared_context(proposal, agent_manifest, domain_context)
     return proposal, _coverage_report(trace_export, outcomes, runs_by_id, proposal, detector_matches)
+
+
+def _add_section(lines: list[str], heading: str, text: str | None) -> None:
+    if text:
+        lines.extend(["", f"## {heading}", text])
+
+
+def _normalized_acceptance_criteria(items: list[Any]) -> list[dict[str, str]]:
+    criteria = []
+    for index, item in enumerate(items, start=1):
+        if isinstance(item, dict):
+            criterion_id = str(item.get("id") or f"criterion-{index}")
+            description = str(item.get("description") or "")
+        else:
+            criterion_id = f"criterion-{index}"
+            description = str(item)
+        criteria.append({"id": criterion_id, "description": description})
+    return criteria
+
+
+def _checks_by_criterion(criteria: list[dict[str, str]], checks: list[Any]) -> dict[str, list[dict[str, Any]]]:
+    criterion_ids = {criterion["id"] for criterion in criteria}
+    grouped = {criterion_id: [] for criterion_id in criterion_ids}
+    grouped[""] = []
+    for check in checks:
+        if not isinstance(check, dict):
+            continue
+        refs = [ref for ref in check.get("criterion_refs", []) if ref in criterion_ids]
+        if not refs:
+            grouped[""].append(check)
+            continue
+        for ref in refs:
+            grouped[ref].append(check)
+    return grouped
+
+
+def _render_check(check: dict[str, Any]) -> str:
+    role = check.get("role", "check")
+    suite = check.get("suite", "suite")
+    metric = check.get("metric", "metric")
+    op = check.get("op", "?")
+    value = check.get("value", "unknown")
+    parts = [f"{role}: {suite} {metric} {op} {_markdown_value(value)}"]
+    if check.get("min_cases") is not None:
+        parts.append(f"min_cases={check['min_cases']}")
+    if check.get("trace_set_ref"):
+        parts.append(f"trace_set={check['trace_set_ref']}")
+    if check.get("evidence_refs"):
+        parts.append("evidence=" + ", ".join(str(ref) for ref in check["evidence_refs"]))
+    return "; ".join(parts)
+
+
+def _render_evidence(item: dict[str, Any]) -> str:
+    evidence_type = item.get("type", "evidence")
+    evidence_ref = item.get("evidence_ref")
+    immutable_ref = item.get("immutable_ref")
+    run_id = item.get("run_id")
+
+    parts = [f"`{evidence_type}`"]
+    if evidence_ref:
+        parts.append(f"`{evidence_ref}`")
+    if run_id:
+        parts.append(f"run `{run_id}`")
+    if immutable_ref:
+        parts.append(f"immutable `{immutable_ref}`")
+
+    observed = item.get("observed")
+    if observed:
+        parts.append(str(observed))
+    return " - ".join(parts)
+
+
+def _markdown_value(value: Any) -> str:
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, str):
+        return value
+    return str(value)
 
 
 def _coverage_report(
