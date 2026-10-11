@@ -21,6 +21,19 @@
     "proposal_id": { "type": "string", "minLength": 1 },
     "title": { "type": "string", "minLength": 1 },
     "status": { "enum": ["proposed", "accepted", "rejected", "tested"] },
+    "approval": {
+      "type": "object",
+      "required": ["proposal_digest"],
+      "properties": {
+        "proposal_digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "approved_by": { "type": "string", "minLength": 1 },
+        "approved_at": { "type": "string", "minLength": 1 },
+        "notes": { "type": "string" }
+      }
+    },
     "problem": {
       "type": "object",
       "required": ["summary"],
@@ -168,5 +181,14 @@
         "plan": { "type": "string", "minLength": 1 }
       }
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "status": { "const": "accepted" } },
+        "required": ["status"]
+      },
+      "then": { "required": ["approval"] }
+    }
+  ]
 }

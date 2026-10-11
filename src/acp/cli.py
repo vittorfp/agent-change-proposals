@@ -15,7 +15,7 @@ from acp.importers import (
 from acp.io import dump_data, load_data
 from acp.proposals import build_proposal_with_coverage, render_proposal_pr_checklist
 from acp.replay import compare_replay_results
-from acp.schemas import SCHEMAS, schema_names, validate_instance
+from acp.schemas import SCHEMAS, change_proposal_digest, schema_names, validate_instance
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -55,6 +55,8 @@ def main(argv: list[str] | None = None) -> int:
     render_pr_parser = proposal_subparsers.add_parser("render-pr")
     render_pr_parser.add_argument("proposal")
     render_pr_parser.add_argument("--output")
+    digest_parser = proposal_subparsers.add_parser("digest")
+    digest_parser.add_argument("proposal")
 
     replay_parser = subparsers.add_parser("replay")
     replay_subparsers = replay_parser.add_subparsers(dest="replay_command", required=True)
@@ -118,6 +120,8 @@ def main(argv: list[str] | None = None) -> int:
             )
         if args.command == "proposal" and args.proposal_command == "render-pr":
             return _proposal_render_pr(args.proposal, args.output)
+        if args.command == "proposal" and args.proposal_command == "digest":
+            return _proposal_digest(args.proposal)
         if args.command == "replay" and args.replay_command == "compare":
             return _replay_compare(args.baseline, args.candidate, args.output)
         if args.command == "import" and args.import_command == "openinference":
@@ -251,6 +255,13 @@ def _proposal_render_pr(proposal_path: str, output_path: str | None = None) -> i
         print(f"wrote: {output_path}")
     else:
         print(markdown, end="")
+    return 0
+
+
+def _proposal_digest(proposal_path: str) -> int:
+    proposal = load_data(proposal_path)
+    validate(instance=proposal, schema=SCHEMAS["change_proposal"])
+    print(change_proposal_digest(proposal))
     return 0
 
 

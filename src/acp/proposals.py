@@ -58,6 +58,9 @@ def render_proposal_pr_checklist(proposal: dict[str, Any]) -> str:
     outcome = validation.get("outcome")
     if outcome:
         lines.append(f"- Validation outcome: `{outcome}`")
+    approval = proposal.get("approval")
+    if isinstance(approval, dict) and approval.get("proposal_digest"):
+        lines.append(f"- Approval digest: `{approval['proposal_digest']}`")
 
     _add_section(lines, "Problem", proposal.get("problem", {}).get("summary"))
     _add_section(lines, "Hypothesis", proposal.get("hypothesis", {}).get("summary"))

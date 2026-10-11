@@ -120,6 +120,16 @@ acp proposal render-pr rfcs/examples/pr-ready.change_proposal.example.json \
   --output proposal-checklist.md
 ```
 
+Compute the canonical digest that an accepted proposal approval should bind to:
+
+```bash
+acp proposal digest rfcs/examples/pr-ready.change_proposal.example.json
+```
+
+If `status` is `accepted`, validation requires `approval.proposal_digest` to
+match the canonical proposal digest. Edits after approval make the digest stale
+and validation fails.
+
 ## V0 Flow
 
 ```text

@@ -217,9 +217,10 @@ look like:
 ```
 
 The same feedback also raised approval integrity: `status: accepted` is not
-enough if the proposal can be edited after review. A future schema should
-consider approval metadata tied to a canonical proposal digest, so edits after
-approval invalidate the prior acceptance.
+enough if the proposal can be edited after review. ACP now supports
+`approval.proposal_digest`, computed from the canonical proposal payload with
+the `approval` block omitted. If an accepted proposal is edited after approval,
+the old digest becomes stale and validation fails.
 
 ### Reddit Feedback: Counterfactuals, Frozen Sets, And Verdict Diffs
 
@@ -328,8 +329,9 @@ dangling `criterion_refs`, and preserve compatibility with string-only
 - Should checks reference acceptance criteria by stable criterion ID, and
   should dangling check refs fail validation?
 - Should one check be allowed to reference multiple acceptance criteria?
-- Should accepted proposals include approval metadata with a canonical proposal
-  digest?
+- Should accepted proposals require more approval metadata than the canonical
+  proposal digest, such as reviewer identity, approval time, or signing
+  mechanism?
 - Should validation checks have roles such as `positive`, `negative`,
   `counterfactual`, `canary`, or `verdict_diff`?
 - Should the schema require at least one negative/counterfactual case for

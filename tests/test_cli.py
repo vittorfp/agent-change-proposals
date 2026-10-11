@@ -10,7 +10,7 @@ from acp.cli import main
 from acp.examples import verify_examples
 from acp.importers import langfuse_observations_to_trace_export, openinference_to_trace_export
 from acp.proposals import build_proposal
-from acp.schemas import CHANGE_PROPOSAL_SCHEMA, SCHEMAS
+from acp.schemas import CHANGE_PROPOSAL_SCHEMA, SCHEMAS, change_proposal_digest
 
 EXAMPLES = [
     ("rag-missed-retrieval", "Require retrieval for context-dependent questions"),
@@ -215,6 +215,42 @@ def test_proposal_render_pr_outputs_review_checklist(tmp_path: Path) -> None:
     assert "`evidence:trace:run_refund_policy_041:no-retrieval`" in markdown
     assert "## Risk" in markdown
     assert "## Rollback" in markdown
+
+
+def test_proposal_digest_command_outputs_canonical_digest(capsys: pytest.CaptureFixture[str]) -> None:
+    root = Path(__file__).resolve().parents[1]
+    proposal_path = root / "rfcs" / "examples" / "pr-ready.change_proposal.example.json"
+    proposal = json.loads(proposal_path.read_text(encoding="utf-8"))
+
+    result = main(["proposal", "digest", str(proposal_path)])
+
+    assert result == 0
+    assert capsys.readouterr().out.strip() == change_proposal_digest(proposal)
+
+
+def test_accepted_proposal_requires_matching_approval_digest(
+    capsys: pytest.CaptureFixture[str], tmp_path: Path
+) -> None:
+    root = Path(__file__).resolve().parents[1]
+    proposal = json.loads(
+        (root / "rfcs" / "examples" / "pr-ready.change_proposal.example.json").read_text(encoding="utf-8")
+    )
+    proposal["status"] = "accepted"
+    proposal["approval"] = {
+        "approved_by": "reviewer@example.com",
+        "approved_at": "2026-10-11T12:00:00+00:00",
+        "proposal_digest": change_proposal_digest(proposal),
+    }
+    proposal_path = tmp_path / "accepted.json"
+    proposal_path.write_text(json.dumps(proposal), encoding="utf-8")
+
+    assert main(["validate", "change_proposal", str(proposal_path)]) == 0
+
+    proposal["title"] = "Edited after approval"
+    proposal_path.write_text(json.dumps(proposal), encoding="utf-8")
+
+    assert main(["validate", "change_proposal", str(proposal_path)]) == 1
+    assert "approval.proposal_digest does not match" in capsys.readouterr().err
 
 
 def test_declared_intent_contracts_are_valid() -> None:

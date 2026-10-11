@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -25,6 +26,19 @@ CHANGE_PROPOSAL_SCHEMA = {
         "proposal_id": {"type": "string", "minLength": 1},
         "title": {"type": "string", "minLength": 1},
         "status": {"enum": ["proposed", "accepted", "rejected", "tested"]},
+        "approval": {
+            "type": "object",
+            "required": ["proposal_digest"],
+            "properties": {
+                "proposal_digest": {
+                    "type": "string",
+                    "pattern": "^sha256:[a-f0-9]{64}$",
+                },
+                "approved_by": {"type": "string", "minLength": 1},
+                "approved_at": {"type": "string", "minLength": 1},
+                "notes": {"type": "string"},
+            },
+        },
         "problem": {
             "type": "object",
             "required": ["summary"],
@@ -171,6 +185,12 @@ CHANGE_PROPOSAL_SCHEMA = {
             },
         },
     },
+    "allOf": [
+        {
+            "if": {"properties": {"status": {"const": "accepted"}}, "required": ["status"]},
+            "then": {"required": ["approval"]},
+        }
+    ],
 }
 
 IMPROVEMENT_SURFACE_SCHEMA = {
@@ -372,6 +392,16 @@ def schema_names() -> list[str]:
     return sorted(SCHEMAS)
 
 
+def change_proposal_digest(proposal: dict) -> str:
+    canonical = {
+        key: value
+        for key, value in proposal.items()
+        if key != "approval"
+    }
+    encoded = json.dumps(canonical, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return f"sha256:{hashlib.sha256(encoded).hexdigest()}"
+
+
 def validate_instance(schema_name: str, instance: object) -> None:
     validate(instance=instance, schema=SCHEMAS[schema_name])
     if schema_name == "change_proposal" and isinstance(instance, dict):
@@ -379,6 +409,17 @@ def validate_instance(schema_name: str, instance: object) -> None:
 
 
 def validate_change_proposal_semantics(proposal: dict) -> None:
+    if proposal.get("status") == "accepted":
+        approval = proposal.get("approval")
+        if not isinstance(approval, dict):
+            raise ValidationError("accepted proposals require approval metadata")
+        expected_digest = change_proposal_digest(proposal)
+        actual_digest = approval.get("proposal_digest")
+        if actual_digest != expected_digest:
+            raise ValidationError(
+                "approval.proposal_digest does not match the canonical proposal digest"
+            )
+
     validation = proposal.get("validation")
     if not isinstance(validation, dict):
         return
