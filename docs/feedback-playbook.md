@@ -33,7 +33,7 @@ The artifact I want feedback on is this example proposal:
 https://github.com/vittorfp/agent-change-proposals/blob/main/rfcs/examples/pr-ready.change_proposal.example.json
 
 Latest release:
-https://github.com/vittorfp/agent-change-proposals/releases/tag/v0.6.0
+https://github.com/vittorfp/agent-change-proposals/releases/tag/v0.6.1
 
 Would something like this be useful in your agent review/eval workflow, or is
 it solving the wrong problem?
@@ -52,7 +52,7 @@ important, what change is suggested, what evidence supports it, and how to
 validate/rollback it.
 
 Repo: https://github.com/vittorfp/agent-change-proposals
-Latest release: https://github.com/vittorfp/agent-change-proposals/releases/tag/v0.6.0
+Latest release: https://github.com/vittorfp/agent-change-proposals/releases/tag/v0.6.1
 Example proposal: https://github.com/vittorfp/agent-change-proposals/blob/main/rfcs/examples/pr-ready.change_proposal.example.json
 Discussion: https://github.com/vittorfp/agent-change-proposals/discussions/6
 

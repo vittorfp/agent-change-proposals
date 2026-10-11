@@ -9,7 +9,7 @@ help decide where to ask and what questions to ask.
 
 ## Current State
 
-- Latest release: <https://github.com/vittorfp/agent-change-proposals/releases/tag/v0.6.0>
+- Latest release: <https://github.com/vittorfp/agent-change-proposals/releases/tag/v0.6.1>
 - Public discussion: <https://github.com/vittorfp/agent-change-proposals/discussions/6>
 - Feedback issue: <https://github.com/vittorfp/agent-change-proposals/issues/5>
 - Schema follow-up issue: <https://github.com/vittorfp/agent-change-proposals/issues/3>
@@ -99,7 +99,7 @@ a reviewable proposal:
 - how to roll it back.
 
 Repo: https://github.com/vittorfp/agent-change-proposals
-Latest release: https://github.com/vittorfp/agent-change-proposals/releases/tag/v0.6.0
+Latest release: https://github.com/vittorfp/agent-change-proposals/releases/tag/v0.6.1
 Example proposal: https://github.com/vittorfp/agent-change-proposals/blob/main/rfcs/examples/pr-ready.change_proposal.example.json
 Discussion: https://github.com/vittorfp/agent-change-proposals/discussions/6
 

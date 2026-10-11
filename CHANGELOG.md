@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.6.1 - 2026-10-11
+
+PR workflow follow-up for v0.6.
+
+- Added `acp proposal render-pr` to render a `change_proposal` as Markdown for
+  PR descriptions or comments.
+- Added `acp proposal digest` for canonical proposal approval digests.
+- Added `approval.proposal_digest` validation so accepted proposals become
+  stale if edited after approval.
+- Updated feedback docs for the v0.6 PR-ready workflow.
+
 ## v0.6.0 - 2026-10-11
 
 PR-ready validation checks for agent change proposals.
